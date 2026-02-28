@@ -1,0 +1,14 @@
+
+> dam_instagram_app@0.0.0 dev
+> vite
+
+
+  VITE v7.3.1  ready in 204 ms
+
+  ➜  Local:   http://localhost:5173/
+  ➜  Network: use --host to expose
+11:28:09 AM [vite] vite.config.js changed, restarting server...
+11:28:09 AM [vite] server restarted.
+11:29:38 AM [vite] (client) hmr update /src/pages/Home.jsx, /src/pages/AssetDetail.jsx
+11:29:38 AM [vite] (client) ✨ new dependencies optimized: dropbox
+11:29:38 AM [vite] (client) ✨ optimized dependencies changed. reloading

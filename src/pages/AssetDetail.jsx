@@ -1,0 +1,1187 @@
+
+import React, { useEffect, useState, useRef } from 'react';
+import { useParams, Link, useLocation, useNavigate } from 'react-router-dom';
+import { getAssetById, getThumbnail, getTemporaryLink, addTag, getTags } from '../services/DropboxService';
+import { initFacebookSdk, loginToInstagram, getInstagramAccountId, postToInstagram } from '../services/InstagramService';
+import { loginToTikTok, postToTikTok, getTikTokCreatorInfo } from '../services/TikTokService';
+import { loginToFacebook, getFacebookPages, postToFacebook } from '../services/FacebookService';
+import { getBanners } from '../services/DirectusService';
+import { ArrowLeft, Instagram, Send, Plus, Tag, ChevronLeft, ChevronRight, Music2, Facebook, Loader2, Download, Copy, ExternalLink, MessageSquareText, X, Share2 } from 'lucide-react';
+
+import QuickHashtags from '../components/QuickHashtags';
+
+const AssetDetail = () => {
+    const { id } = useParams();
+    const location = useLocation();
+    const navigate = useNavigate();
+    const [asset, setAsset] = useState(null);
+    const [loading, setLoading] = useState(true);
+    const [imageLoading, setImageLoading] = useState(true);
+    const scrollTargetRef = useRef(null);
+
+    // Auth State
+    const [isConnectedInstagram, setIsConnectedInstagram] = useState(false);
+    const [isConnectedTikTok, setIsConnectedTikTok] = useState(false);
+    const [isConnectedFacebook, setIsConnectedFacebook] = useState(false);
+
+    // Facebook specific state
+    const [facebookPages, setFacebookPages] = useState([]);
+    const [selectedPageId, setSelectedPageId] = useState('');
+    const [fbMode, setFbMode] = useState('PAGE'); // 'PAGE', 'PERSONAL', 'NATIVE'
+    const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+
+    const [destination, setDestination] = useState('INSTAGRAM');
+
+    // Post State
+    const [caption, setCaption] = useState('');
+    const [posting, setPosting] = useState(false);
+    const [postResult, setPostResult] = useState(null);
+    const [error, setError] = useState(null);
+    const [postType, setPostType] = useState('FEED');
+
+    // Tags State
+    const [tags, setTags] = useState([]);
+    const [newTag, setNewTag] = useState('');
+    const [addingTag, setAddingTag] = useState(false);
+    // Suggested Texts State
+    const [suggestedTexts, setSuggestedTexts] = useState([]);
+    const [isSuggestedTextsModalOpen, setIsSuggestedTextsModalOpen] = useState(false);
+    const [suggestedTextMode, setSuggestedTextMode] = useState('SET_CAPTION'); // 'SET_CAPTION' | 'COPY'
+    const [copyFeedback, setCopyFeedback] = useState('');
+
+    useEffect(() => {
+        const fetchSuggestedTexts = async () => {
+            if (!asset || !asset.path) return;
+
+            try {
+                const banners = await getBanners();
+                if (!banners) return;
+
+                // Find matching banner
+                // Directus banners use 'target_path'
+                // Logic: if asset.path starts with banner.target_path
+                // We should pick the longest matching path (most specific)? Or just the first one?
+                // Usually one banner per folder.
+
+                // Normalize paths
+                const assetPath = asset.path.toLowerCase();
+                const GLOBAL_ROOT_PATH = import.meta.env.VITE_DROPBOX_ROOT_PATH || "";
+
+                // Filter all matching banners first
+                const matchingBanners = banners.filter(b => {
+                    if (!b.target_path) return false;
+
+                    let target = b.target_path;
+                    // If target is relative (doesn't start with / or doesn't include root), prepend root
+                    // Directus targets are often like "Argentina/Campañas"
+                    // Asset path is like "/Apps/Posteo Facil/Argentina/Campañas/..."
+
+                    if (!target.startsWith('/')) {
+                        const cleanRoot = GLOBAL_ROOT_PATH.replace(/\/$/, '');
+                        target = `${cleanRoot}/${target}`;
+                    } else if (!target.toLowerCase().startsWith(GLOBAL_ROOT_PATH.toLowerCase().replace(/\/$/, ''))) {
+                        // Even if it starts with /, if it misses the root prefix, add it?
+                        // safest to assume if it doesn't match the root, it's relative from root.
+                        const cleanRoot = GLOBAL_ROOT_PATH.replace(/\/$/, '');
+                        // Ensure we don't double slash if target starts with /
+                        target = `${cleanRoot}${target}`;
+                    }
+
+                    const targetLower = target.toLowerCase();
+                    return assetPath.startsWith(targetLower);
+                });
+
+                // Sort by length (descending) to get the most specific match
+                matchingBanners.sort((a, b) => b.target_path.length - a.target_path.length);
+
+                const matchingBanner = matchingBanners.length > 0 ? matchingBanners[0] : null;
+
+                if (matchingBanner && matchingBanner.suggested_texts && Array.isArray(matchingBanner.suggested_texts)) {
+                    // Filter valid texts
+                    const validTexts = matchingBanner.suggested_texts
+                        .map(item => item.text) // Extract 'text' field from repeater item
+                        .filter(t => t && typeof t === 'string' && t.trim().length > 0);
+
+                    setSuggestedTexts(validTexts);
+                } else {
+                    setSuggestedTexts([]);
+                }
+
+            } catch (err) {
+                console.error("Error fetching suggested texts:", err);
+            }
+        };
+
+        fetchSuggestedTexts();
+    }, [asset]);
+
+
+    useEffect(() => {
+        const fetchAsset = async () => {
+            const data = await getAssetById(id);
+            if (data) {
+                const link = await getTemporaryLink(id);
+                const thumb = await getThumbnail(id);
+                setAsset({ ...data, url: link || thumb, thumbnail: thumb });
+                setImageLoading(true);
+
+                // Fetch Tags using PATH, not ID
+                try {
+                    // Dropbox Native Tags API requires path_lower or path_display
+                    // data.path should hold path_display from getAssetById
+                    if (data.path) {
+                        const fetchedTags = await getTags(data.path);
+                        setTags(fetchedTags);
+                    }
+                } catch (e) {
+                    console.error("Failed to fetch tags:", e);
+                }
+            }
+            setLoading(false);
+        };
+        fetchAsset();
+
+        // Check if already connected from localStorage
+        const ttToken = localStorage.getItem('tiktok_access_token');
+        const igToken = localStorage.getItem('instagram_access_token');
+        const igAccount = localStorage.getItem('instagram_account_id');
+        const fbToken = localStorage.getItem('facebook_access_token');
+
+        setIsConnectedInstagram(!!(igToken && igAccount));
+        setIsConnectedTikTok(!!ttToken);
+        setIsConnectedFacebook(!!fbToken);
+
+        // Fetch Facebook pages if connected
+        if (fbToken) {
+            getFacebookPages(fbToken).then(pages => {
+                setFacebookPages(pages);
+                if (pages.length > 0) setSelectedPageId(pages[0].id);
+            }).catch(console.error);
+        }
+
+        // If specifically returning from TikTok/Facebook auth, maybe switch destination
+        if (location.pathname.includes('tiktok')) {
+            setDestination('TIKTOK');
+        } else if (location.pathname.includes('facebook')) {
+            setDestination('FACEBOOK');
+        }
+    }, [id, location.pathname]);
+
+    const handleAddTag = async () => {
+        if (!newTag.trim() || !asset) return;
+        setAddingTag(true);
+        try {
+            // Use asset.path (path_display) for adding tags
+            const updatedTags = await addTag(asset.path, newTag.trim());
+            setTags(updatedTags);
+            setNewTag('');
+        } catch (e) {
+            console.error("Failed to add tag", e);
+            setError("Failed to save tag");
+        } finally {
+            setAddingTag(false);
+        }
+    };
+
+    useEffect(() => {
+        // Init SDK on mount
+        initFacebookSdk();
+    }, []);
+
+    const handleConnect = (platform) => {
+        try {
+            // Save state specifically for AssetDetail return
+            localStorage.setItem('pending_asset_detail_id', id);
+            localStorage.setItem('pending_post_caption', caption);
+
+            if (platform === 'INSTAGRAM') {
+                loginToInstagram();
+            } else if (platform === 'TIKTOK') {
+                loginToTikTok();
+            } else {
+                loginToFacebook();
+            }
+        } catch (error) {
+            console.error(error);
+            setError(error.message || "Failed to initiate connection");
+        }
+    };
+
+    const handleDownload = async () => {
+        if (!asset) return;
+        try {
+            let downloadUrl = asset.url;
+
+            // Generate temp link if needed
+            if (!downloadUrl || !downloadUrl.startsWith('http') || downloadUrl.includes('dropbox')) {
+                const link = await getTemporaryLink(asset.path || asset.id);
+                if (link) downloadUrl = link;
+            }
+
+            if (downloadUrl.includes('dropbox.com')) {
+                if (downloadUrl.includes('raw=1')) {
+                    downloadUrl = downloadUrl.replace('raw=1', 'dl=1');
+                } else if (downloadUrl.includes('dl=0')) {
+                    downloadUrl = downloadUrl.replace('dl=0', 'dl=1');
+                } else {
+                    downloadUrl += downloadUrl.includes('?') ? '&dl=1' : '?dl=1';
+                }
+            }
+
+            const link = document.createElement('a');
+            link.href = downloadUrl;
+            link.setAttribute('download', asset.name || 'download');
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        } catch (e) {
+            console.error("Download failed", e);
+            alert("No se pudo iniciar la descarga.");
+        }
+    };
+
+    const handleNativeShare = async () => {
+        if (!asset) return;
+
+        try {
+            setPosting(true); // Reuse posting state for loading feedback
+
+            // 1. Get a direct URL (Dropbox temp link)
+            let fileUrl = asset.url;
+            if (fileUrl.includes('dropbox.com')) {
+                // Ensure we get the raw file, not the preview page
+                // dl=1 forces download, but fetching it might be tricky with CORS if not handled right.
+                // Actually, for fetch() we often need raw=1 to get the binary data directly?
+                // Or just the temp link.
+                // Let's try to get a fresh temp link first to be sure.
+                const link = await getTemporaryLink(asset.path || asset.id);
+                if (link) fileUrl = link;
+            }
+
+            // 2. Fetch the file as a Blob
+            const response = await fetch(fileUrl);
+            const blob = await response.blob();
+
+            // 3. Create a File object
+            // We need a proper filename and mime type
+            const filename = asset.name || 'shared_asset';
+            const file = new File([blob], filename, { type: blob.type });
+
+            // 4. Check if we can share
+            if (navigator.canShare && navigator.canShare({ files: [file] })) {
+                await navigator.share({
+                    files: [file],
+                    title: asset.title || 'Posteo Just',
+                    text: caption || asset.description || 'Mira este contenido!',
+                });
+            } else {
+                // Fallback: Just download it if sharing isn't supported
+                // Or maybe share just text/url? User requested FILE sharing.
+                console.warn("Native file sharing not supported, falling back to download.");
+                await handleDownload();
+            }
+
+        } catch (error) {
+            console.error("Error sharing:", error);
+            // Fallback to download on error?
+            alert("No se pudo compartir nativamente. Iniciando descarga...");
+            await handleDownload();
+        } finally {
+            setPosting(false);
+        }
+    };
+
+    const renderUnconnectedFallback = () => (
+        <div style={{ marginTop: '24px', padding: '20px', backgroundColor: '#f8f9fa', borderRadius: '12px', border: '1px solid #e9ecef' }}>
+            <h4 style={{ margin: '0 0 8px 0', fontSize: '16px', color: '#2c3e50', fontWeight: '600' }}>¿No pudiste conectar tu cuenta?</h4>
+            <p style={{ margin: '0 0 16px 0', fontSize: '14px', color: '#6c757d', lineHeight: '1.5' }}>No importa, igual puedes utilizar estos contenidos para postearlos en tus redes.</p>
+
+            <p style={{ margin: '0 0 12px 0', fontSize: '14px', fontWeight: '600', color: '#34495e' }}>Sigue estos simples pasos:</p>
+            <ol style={{ margin: '0 0 20px 0', paddingLeft: '24px', fontSize: '14px', color: '#495057', lineHeight: '1.6' }}>
+                <li style={{ marginBottom: '6px' }}>Descarga el posteo</li>
+                <li style={{ marginBottom: '6px' }}>Selecciona y copia el texto sugerido para el posteo</li>
+                <li>Ingresa a tu red social y crea un nuevo posteo, selecciona el posteo que descargaste en tu carrete de imágenes y pega el texto sugerido.</li>
+            </ol>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                {suggestedTexts.length > 0 && (
+                    <button
+                        onClick={() => {
+                            setSuggestedTextMode('COPY');
+                            setIsSuggestedTextsModalOpen(true);
+                        }}
+                        style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid #ced4da', background: 'white', cursor: 'pointer', fontSize: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', color: '#495057', fontWeight: '500' }}
+                    >
+                        <Copy size={18} /> Textos sugeridos
+                    </button>
+                )}
+                <button
+                    onClick={handleDownload}
+                    style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid #ced4da', background: 'white', cursor: 'pointer', fontSize: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', color: '#495057', fontWeight: '500' }}
+                >
+                    <Download size={18} /> Descargar posteo
+                </button>
+            </div>
+        </div>
+    );
+
+    const handlePost = async () => {
+        if (destination === 'INSTAGRAM' && postType !== 'STORY' && !caption) {
+            setError("La descripción es obligatoria para publicaciones de Posteo/Reel.");
+            return;
+        }
+        if (destination === 'TIKTOK' && !caption) {
+            setError("TikTok requiere una descripción.");
+            return;
+        }
+
+        // Facebook checks depending on mode
+        if (destination === 'FACEBOOK' && fbMode === 'PAGE' && !selectedPageId) {
+            setError("Debes seleccionar una Página de Facebook.");
+            return;
+        }
+
+        try {
+            setPosting(true);
+            setError(null);
+
+            const igToken = localStorage.getItem('instagram_access_token');
+            const igAccount = localStorage.getItem('instagram_account_id');
+            const ttToken = localStorage.getItem('tiktok_access_token');
+
+            // Resolve public URL
+            let cleanAsset = { ...asset };
+            if (!asset.url || !asset.url.startsWith('http') || asset.url.includes('dropbox')) {
+                const link = await getTemporaryLink(asset.path || asset.id);
+                if (!link) throw new Error("No se pudo generar el enlace público.");
+                cleanAsset.url = link;
+            }
+
+            if (destination === 'INSTAGRAM') {
+                if (!igToken || !igAccount) throw new Error("Instagram no conectado.");
+                const result = await postToInstagram(cleanAsset, caption, igToken, igAccount, postType);
+                setPostResult({
+                    success: true,
+                    message: `¡Publicado exitosamente en Instagram! (ID: ${result.id})`
+                });
+            } else if (destination === 'TIKTOK') {
+                if (!ttToken) throw new Error("TikTok no conectado.");
+                const result = await postToTikTok(cleanAsset, caption, ttToken);
+                setPostResult({
+                    success: true,
+                    message: "¡Publicado exitosamente en TikTok!"
+                });
+            } else if (destination === 'FACEBOOK') {
+
+                if (fbMode === 'PERSONAL') {
+                    // Manual Share Logic (Link Share)
+                    const shareTitle = asset ? asset.title : 'Publicación';
+                    const shareDesc = caption || asset.description || '';
+                    const isVideo = asset.type === 'video';
+
+                    const metadataBase = `${window.location.origin}/api/share-metadata`;
+                    const params = new URLSearchParams();
+                    params.append('title', shareTitle);
+                    params.append('description', shareDesc);
+                    params.append('type', isVideo ? 'video' : 'image');
+
+                    if (isVideo) {
+                        params.append('videoUrl', cleanAsset.url);
+                    } else {
+                        params.append('imageUrl', cleanAsset.url);
+                    }
+
+                    const metadataUrl = `${metadataBase}?${params.toString()}`;
+                    const facebookShareUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(metadataUrl)}&quote=${encodeURIComponent(caption)}`;
+
+                    window.open(facebookShareUrl, '_blank', 'width=600,height=600');
+
+                    setPostResult({
+                        success: true,
+                        message: 'Se abrió la ventana de compartir enlace.'
+                    });
+                } else if (fbMode === 'NATIVE') {
+                    // Native Video Logic (Download + Copy)
+                    // 1. Copy text
+                    try {
+                        await navigator.clipboard.writeText(caption);
+                    } catch (err) {
+                        console.warn("Clipboard access failed", err);
+                    }
+
+                    // 2. Prepare Download URL
+                    await handleDownload();
+
+                    // 4. Open Facebook
+
+                    // 4. Open Facebook
+                    setTimeout(() => {
+                        window.open('https://www.facebook.com', '_blank');
+                    }, 1000);
+
+                    setPostResult({
+                        success: true,
+                        message: '1. Video descargado ⬇️ 2. Texto copiado 📋 3. En Facebook, sube el archivo y pega el texto.'
+                    });
+
+                } else {
+                    // Page Auto Logic
+                    const fbToken = localStorage.getItem('facebook_access_token');
+                    if (!fbToken) throw new Error("Facebook no conectado.");
+                    const page = facebookPages.find(p => p.id === selectedPageId);
+                    if (!page) throw new Error("Página no encontrada.");
+                    const result = await postToFacebook(cleanAsset, caption, page.access_token, page.id);
+                    setPostResult({
+                        success: true,
+                        message: `¡Publicado exitosamente en Facebook! (ID: ${result.id})`
+                    });
+                }
+            }
+
+        } catch (err) {
+            console.error(err);
+            setPostResult({
+                success: false,
+                message: "Error al publicar: " + err.message
+            });
+        } finally {
+            setPosting(false);
+        }
+    };
+
+    const handleDisconnect = (platform) => {
+        if (platform === 'INSTAGRAM') {
+            localStorage.removeItem('instagram_access_token');
+            localStorage.removeItem('instagram_account_id');
+            localStorage.removeItem('instagram_username');
+            setIsConnectedInstagram(false);
+        } else if (platform === 'TIKTOK') {
+            localStorage.removeItem('tiktok_access_token');
+            localStorage.removeItem('tiktok_username');
+            localStorage.removeItem('tiktok_open_id');
+            setIsConnectedTikTok(false);
+        } else {
+            localStorage.removeItem('facebook_access_token');
+            setIsConnectedFacebook(false);
+            setFacebookPages([]);
+        }
+        setPostResult(null);
+    };
+
+    const contextIds = location.state?.contextIds || [];
+    const returnPath = location.state?.returnPath;
+
+    // Compute Next/Prev
+    const currentIndex = contextIds.indexOf(id);
+    const prevId = currentIndex > 0 ? contextIds[currentIndex - 1] : null;
+    const nextId = currentIndex !== -1 && currentIndex < contextIds.length - 1 ? contextIds[currentIndex + 1] : null;
+
+    // Determine Back Link
+    const GLOBAL_ROOT_PATH = import.meta.env.VITE_DROPBOX_ROOT_PATH || "";
+
+    let backLink = '/';
+
+    if (returnPath) {
+        // Normal case: We have state from navigation
+        backLink = `/?path=${encodeURIComponent(returnPath)}`;
+        // If we have country in query, maybe we should preserve it?
+        // But pure path navigation in Home usually handles it if path is absolute.
+        // However, Home expects 'country' param for initial load usually.
+        // Let's rely on Home's ability to parse path or just link to root if fails.
+        // Better: Try to ensure country is in the URL if possible.
+        // But wait, the previous code was: `/?path=${encodeURIComponent(returnPath)}` which relies on Home logic (if path includes country).
+        // Actually Home requires `country` param?
+        // Home: const APP_ROOT_PATH = country ? ... : ...;
+        // If no country, it navigates to '/'.
+        // So we MUST provide country param if we want to go deep.
+
+        // Let's try to parse country from returnPath if we can, or rely on existing mechanism.
+        // Ideally we pass 'country' in state too?
+        // location.state has contextIds, returnPath.
+        // But let's look at the fallback I'm designing:
+
+        // If we have returnPath, assume it's valid for 'path' param. 
+        // We probably also need 'country' param if the returnPath is inside a country.
+        // But if returnPath is absolute (starts with /Apps/...), Home might handle it?
+        // Home.jsx: const currentPath = pathParam ... : APP_ROOT_PATH;
+        // But generic Home checks `if (!country) navigate('/')`.
+        // SO WE MUST PROVIDE COUNTRY PARAM!
+    }
+
+    // Improved Back Link Calculation
+    const getBackLink = () => {
+        if (returnPath) {
+            // Try to extract country from returnPath or location?
+            // If returnPath is "/Apps/PF/Argentina/..."
+            // We can assume we need to extract "Argentina".
+            const relative = returnPath.replace(GLOBAL_ROOT_PATH, '');
+            const parts = relative.split('/').filter(p => p);
+            if (parts.length > 0) {
+                const country = parts[0];
+                return `/home?country=${country}&path=${encodeURIComponent(returnPath)}`;
+            }
+        }
+
+        if (asset && asset.path) {
+            // Fallback: Infer from asset path
+            // content path: /Apps/PF/Argentina/Folder/Image.jpg
+            const dirPath = asset.path.substring(0, asset.path.lastIndexOf('/'));
+
+            // Extract Country
+            // Remove Global Root
+            // /Apps/Posteo Facil/Argentina/Folder -> /Argentina/Folder
+            const relativeToRoot = dirPath.replace(GLOBAL_ROOT_PATH, '');
+            const parts = relativeToRoot.split('/').filter(p => p);
+
+            if (parts.length > 0) {
+                const country = parts[0];
+                return `/home?country=${country}&path=${encodeURIComponent(dirPath)}`;
+            }
+        }
+
+        return '/';
+    };
+
+    backLink = getBackLink();
+
+    if (loading) return <div className="container">Cargando...</div>;
+    if (!asset) return <div className="container">Archivo no encontrado</div>;
+
+    const navigateTo = (targetId) => {
+        if (!targetId) return;
+        // When navigating between siblings, we keep the same returnPath
+        navigate(`/asset/${targetId}`, { state: { contextIds, returnPath } });
+    };
+
+    const handleDestinationChange = (dest) => {
+        setDestination(dest);
+        setTimeout(() => {
+            scrollTargetRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }, 100);
+    };
+
+    return (
+        <div className="detail-view">
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
+                <Link to={backLink} style={{ display: 'flex', alignItems: 'center', textDecoration: 'none', color: 'inherit' }}>
+                    <ArrowLeft size={20} /> <span style={{ marginLeft: '8px' }}>Atrás</span>
+                </Link>
+
+                {/* Navigation Controls */}
+                {contextIds.length > 0 && (
+                    <div style={{ display: 'flex', gap: '8px' }}>
+                        <button
+                            onClick={() => navigateTo(prevId)}
+                            disabled={!prevId}
+                            style={{
+                                background: 'none',
+                                border: '1px solid #ddd',
+                                borderRadius: '50%',
+                                width: '32px',
+                                height: '32px',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                cursor: prevId ? 'pointer' : 'default',
+                                opacity: prevId ? 1 : 0.3
+                            }}
+                        >
+                            <ChevronLeft size={20} />
+                        </button>
+                        <button
+                            onClick={() => navigateTo(nextId)}
+                            disabled={!nextId}
+                            style={{
+                                background: 'none',
+                                border: '1px solid #ddd',
+                                borderRadius: '50%',
+                                width: '32px',
+                                height: '32px',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                cursor: nextId ? 'pointer' : 'default',
+                                opacity: nextId ? 1 : 0.3
+                            }}
+                        >
+                            <ChevronRight size={20} />
+                        </button>
+                    </div>
+                )}
+            </div>
+
+            {imageLoading && <div className="skeleton-detail"></div>}
+
+            {asset.type === 'video' ? (
+                <video
+                    src={asset.url}
+                    controls
+                    className="detail-image"
+                    style={{
+                        height: '300px',
+                        width: '100%',
+                        objectFit: 'contain',
+                        backgroundColor: '#f0f0f0',
+                        display: imageLoading ? 'none' : 'block'
+                    }}
+                    onLoadedData={() => setImageLoading(false)}
+                />
+            ) : (
+                <img
+                    src={asset.url}
+                    alt={asset.title}
+                    className="detail-image"
+                    style={{
+                        height: '300px',
+                        width: '100%',
+                        objectFit: 'contain',
+                        backgroundColor: '#f0f0f0',
+                        display: imageLoading ? 'none' : 'block'
+                    }}
+                    onLoad={() => setImageLoading(false)}
+                />
+            )}
+
+            <div className="meta-info">
+                <h2>{asset.title}</h2>
+                <p>{asset.description}</p>
+                <small>{asset.date}</small>
+
+                <div style={{ marginTop: '16px', borderTop: '1px solid #eee', paddingTop: '16px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', marginBottom: '8px' }}>
+                        <Tag size={16} style={{ marginRight: '6px', color: '#666' }} />
+                        <span style={{ fontWeight: '500', color: '#333' }}>Etiquetas</span>
+                    </div>
+
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginBottom: '12px' }}>
+                        {tags.map((tag, i) => (
+                            <span key={i} style={{
+                                backgroundColor: '#f0f0f0',
+                                padding: '4px 8px',
+                                borderRadius: '12px',
+                                fontSize: '12px',
+                                color: '#555'
+                            }}>
+                                #{tag}
+                            </span>
+                        ))}
+                        {tags.length === 0 && <span style={{ color: '#999', fontSize: '13px' }}>Sin etiquetas</span>}
+                    </div>
+
+                </div>
+            </div>
+
+            <div className="instagram-section">
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '20px' }}>
+                    <button
+                        onClick={() => handleDestinationChange('INSTAGRAM')}
+                        style={{
+                            flex: 1, padding: '10px', borderRadius: '8px', border: destination === 'INSTAGRAM' ? '2px solid #0095f6' : '1px solid #dbdbdb',
+                            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', cursor: 'pointer',
+                            backgroundColor: destination === 'INSTAGRAM' ? '#f0f9ff' : 'white'
+                        }}
+                    >
+                        <Instagram size={20} color={destination === 'INSTAGRAM' ? '#0095f6' : '#666'} />
+                        <span style={{ fontSize: '14px', fontWeight: destination === 'INSTAGRAM' ? '600' : '400' }}>Instagram</span>
+                    </button>
+                    <button
+                        onClick={() => handleDestinationChange('TIKTOK')}
+                        style={{
+                            flex: 1, padding: '10px', borderRadius: '8px', border: destination === 'TIKTOK' ? '2px solid #000' : '1px solid #dbdbdb',
+                            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', cursor: 'pointer',
+                            backgroundColor: destination === 'TIKTOK' ? '#f5f5f5' : 'white'
+                        }}
+                    >
+                        <Music2 size={20} color={destination === 'TIKTOK' ? '#000' : '#666'} />
+                        <span style={{ fontSize: '14px', fontWeight: destination === 'TIKTOK' ? '600' : '400' }}>TikTok</span>
+                    </button>
+                    <button
+                        onClick={() => handleDestinationChange('FACEBOOK')}
+                        style={{
+                            flex: 1, padding: '10px', borderRadius: '8px', border: destination === 'FACEBOOK' ? '2px solid #1877F2' : '1px solid #dbdbdb',
+                            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', cursor: 'pointer',
+                            backgroundColor: destination === 'FACEBOOK' ? '#e7f3ff' : 'white'
+                        }}
+                    >
+                        <Facebook size={20} color={destination === 'FACEBOOK' ? '#1877F2' : '#666'} />
+                        <span style={{ fontSize: '14px', fontWeight: destination === 'FACEBOOK' ? '600' : '400' }}>Facebook</span>
+                    </button>
+
+                    <button
+                        onClick={() => handleDestinationChange('SHARE')}
+                        style={{
+                            flex: 1, padding: '10px', borderRadius: '8px', border: destination === 'SHARE' ? '2px solid #555' : '1px solid #dbdbdb',
+                            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', cursor: 'pointer',
+                            backgroundColor: destination === 'SHARE' ? '#f0f0f0' : 'white'
+                        }}
+                    >
+                        <Share2 size={20} color={destination === 'SHARE' ? '#333' : '#666'} />
+                        <span style={{ fontSize: '14px', fontWeight: destination === 'SHARE' ? '600' : '400' }}>Compartir</span>
+                    </button>
+                </div>
+
+                <h3 ref={scrollTargetRef}>
+                    {destination === 'INSTAGRAM' ? 'Publicar en Instagram' :
+                        destination === 'TIKTOK' ? 'Publicar en TikTok' :
+                            destination === 'FACEBOOK' ? 'Publicar en Facebook' :
+                                'Compartir'}
+                </h3>
+
+                {error && (
+                    <div style={{ padding: '10px', backgroundColor: '#f8d7da', color: '#721c24', borderRadius: '4px', marginBottom: '10px' }}>
+                        {error}
+                    </div>
+                )}
+
+                {destination === 'INSTAGRAM' ? (
+                    !isConnectedInstagram ? (
+                        <>
+                            <button
+                                className="btn"
+                                onClick={() => handleConnect('INSTAGRAM')}
+                                disabled={posting}
+                                style={{ backgroundColor: '#00C853' }}
+                            >
+                                <Instagram size={20} />
+                                {posting ? 'Conectando...' : 'Conectar a Instagram'}
+                            </button>
+                            {renderUnconnectedFallback()}
+                        </>
+                    ) : null
+                ) : destination === 'TIKTOK' ? (
+                    !isConnectedTikTok ? (
+                        <>
+                            <button
+                                className="btn"
+                                onClick={() => handleConnect('TIKTOK')}
+                                disabled={posting}
+                                style={{ backgroundColor: '#000000' }}
+                            >
+                                <Music2 size={20} />
+                                {posting ? 'Conectando...' : 'Conectar a TikTok'}
+                            </button>
+                            {renderUnconnectedFallback()}
+                        </>
+                    ) : null
+                ) : destination === 'FACEBOOK' ? (
+                    !isConnectedFacebook ? (
+                        <>
+                            <button
+                                className="btn"
+                                onClick={() => handleConnect('FACEBOOK')}
+                                disabled={posting}
+                                style={{ backgroundColor: '#1877F2' }}
+                            >
+                                <Facebook size={20} />
+                                {posting ? 'Conectando...' : 'Conectar a Facebook'}
+                            </button>
+                            {renderUnconnectedFallback()}
+                        </>
+                    ) : null
+                ) : destination === 'SHARE' ? (
+                    <div style={{ marginTop: '24px', padding: '20px', backgroundColor: '#f8f9fa', borderRadius: '12px', border: '1px solid #e9ecef' }}>
+                        <h4 style={{ margin: '0 0 16px 0', fontSize: '16px', color: '#2c3e50', fontWeight: '600' }}>Paso a paso para compartir en tus redes</h4>
+
+                        <div style={{ marginBottom: '20px' }}>
+                            <p style={{ margin: '0 0 8px 0', fontSize: '14px', fontWeight: '600', color: '#34495e' }}>1. Selecciona el texto que quieras utilizar para tu publicación.</p>
+                            <p style={{ margin: '0 0 12px 0', fontSize: '14px', color: '#495057', lineHeight: '1.5' }}>
+                                Haz click en el siguiente botón de "Textos sugeridos" para elegir el texto a utilizar. Simplemente toca el texto que quieras usar y se copiará en tu portapapeles para luego pegarlo en tu publicación.
+                            </p>
+                            {suggestedTexts.length > 0 ? (
+                                <button
+                                    onClick={() => {
+                                        setSuggestedTextMode('COPY');
+                                        setIsSuggestedTextsModalOpen(true);
+                                    }}
+                                    style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid #ced4da', background: 'white', cursor: 'pointer', fontSize: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', color: '#495057', fontWeight: '500' }}
+                                >
+                                    <Copy size={18} /> Textos sugeridos
+                                </button>
+                            ) : (
+                                <div style={{ fontSize: '13px', color: '#999', fontStyle: 'italic', padding: '8px', textAlign: 'center' }}>No hay textos sugeridos disponibles para este contenido.</div>
+                            )}
+                        </div>
+
+                        <div>
+                            <p style={{ margin: '0 0 8px 0', fontSize: '14px', fontWeight: '600', color: '#34495e' }}>2. Haz click en "Publicar en mi cuenta".</p>
+                            <p style={{ margin: '0 0 12px 0', fontSize: '14px', color: '#495057', lineHeight: '1.5' }}>
+                                Se desplegará el menú para compartir, busca el icono de la red social donde lo quieras compartir y sigue los pasos para armar tu posteo.
+                            </p>
+                            <button
+                                onClick={handleNativeShare}
+                                disabled={posting}
+                                style={{ width: '100%', padding: '16px', borderRadius: '8px', border: 'none', background: '#0061FE', cursor: 'pointer', fontSize: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', color: 'white', fontWeight: '600', boxShadow: '0 4px 6px rgba(0,0,0,0.1)' }}
+                            >
+                                {posting ? 'Procesando...' : 'Publicar en mi cuenta'}
+                                {!posting && <Share2 size={20} />}
+                            </button>
+                        </div>
+                    </div>
+                ) : null}
+
+                {((destination === 'INSTAGRAM' && isConnectedInstagram) || (destination === 'TIKTOK' && isConnectedTikTok) || (destination === 'FACEBOOK' && isConnectedFacebook)) && (
+                    <div className="post-form">
+
+                        {postResult && (
+                            <div style={{ padding: '16px', marginBottom: '16px', background: postResult.success ? '#d4edda' : '#f8d7da', borderRadius: '8px', color: postResult.success ? '#155724' : '#721c24', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                <span style={{ whiteSpace: 'pre-line' }}>{postResult.message}</span>
+                                <button onClick={() => setPostResult(null)} style={{ background: 'none', border: 'none', fontSize: '16px', cursor: 'pointer', color: 'inherit' }}>&times;</button>
+                            </div>
+                        )}
+
+                        <div style={{ marginBottom: '10px', color: 'green', fontSize: '14px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                <span>✓ Conectado como</span>
+                                {destination === 'INSTAGRAM' ? (
+                                    <span style={{ fontWeight: '600' }}>@{localStorage.getItem('instagram_username')}</span>
+                                ) : destination === 'TIKTOK' ? (
+                                    <span style={{ fontWeight: '600' }}>{localStorage.getItem('tiktok_username')}</span>
+                                ) : (
+                                    <span style={{ fontWeight: '600' }}>Usuario Facebook</span>
+                                )}
+                            </div>
+                            <button
+                                onClick={() => handleDisconnect(destination)}
+                                style={{
+                                    background: 'none',
+                                    border: '1px solid #ccc',
+                                    borderRadius: '4px',
+                                    padding: '2px 8px',
+                                    fontSize: '12px',
+                                    cursor: 'pointer',
+                                    color: '#666'
+                                }}
+                            >
+                                Desconectar
+                            </button>
+                        </div>
+                        {destination === 'INSTAGRAM' && (
+                            <div style={{ display: 'flex', gap: '8px', marginBottom: '16px' }}>
+                                {[
+                                    { id: 'FEED', label: 'Posteo', icon: '🖼️' },
+                                    { id: 'STORY', label: 'Historia', icon: '⏱️' },
+                                    ...(asset.type === 'video' ? [{ id: 'REEL', label: 'Reel', icon: '🎬' }] : [])
+                                ].map(type => (
+                                    <button
+                                        key={type.id}
+                                        onClick={() => setPostType(type.id)}
+                                        style={{
+                                            flex: 1,
+                                            padding: '8px',
+                                            borderRadius: '8px',
+                                            border: postType === type.id ? '2px solid #E1306C' : '1px solid #dbdbdb',
+                                            background: postType === type.id ? '#fff0f5' : 'white',
+                                            color: postType === type.id ? '#E1306C' : '#333',
+                                            cursor: 'pointer',
+                                            fontWeight: postType === type.id ? 'bold' : 'normal'
+                                        }}
+                                    >
+                                        <span style={{ marginRight: '4px' }}>{type.icon}</span>
+                                        {type.label}
+                                    </button>
+                                ))}
+                            </div>
+                        )}
+
+                        {destination === 'FACEBOOK' && (
+                            <div style={{ marginBottom: '16px' }}>
+                                {/* Toggle Mode */}
+                                <div style={{ display: 'flex', gap: '8px', marginBottom: '12px', background: '#f0f2f5', padding: '4px', borderRadius: '8px', overflowX: 'auto' }}>
+                                    <button
+                                        onClick={() => setFbMode('PAGE')}
+                                        style={{
+                                            flex: 1, padding: '6px', borderRadius: '6px', fontSize: '12px', whiteSpace: 'nowrap',
+                                            background: fbMode === 'PAGE' ? 'white' : 'transparent',
+                                            boxShadow: fbMode === 'PAGE' ? '0 1px 2px rgba(0,0,0,0.1)' : 'none',
+                                            fontWeight: fbMode === 'PAGE' ? '600' : 'normal',
+                                            color: fbMode === 'PAGE' ? '#1877F2' : '#666',
+                                            border: 'none', cursor: 'pointer'
+                                        }}
+                                    >
+                                        Página (Auto)
+                                    </button>
+                                    <button
+                                        onClick={() => setFbMode('PERSONAL')}
+                                        style={{
+                                            flex: 1, padding: '6px', borderRadius: '6px', fontSize: '12px', whiteSpace: 'nowrap',
+                                            background: fbMode === 'PERSONAL' ? 'white' : 'transparent',
+                                            boxShadow: fbMode === 'PERSONAL' ? '0 1px 2px rgba(0,0,0,0.1)' : 'none',
+                                            fontWeight: fbMode === 'PERSONAL' ? '600' : 'normal',
+                                            color: fbMode === 'PERSONAL' ? '#1877F2' : '#666',
+                                            border: 'none', cursor: 'pointer'
+                                        }}
+                                    >
+                                        Perfil (Link)
+                                    </button>
+                                    <button
+                                        onClick={() => setFbMode('NATIVE')}
+                                        style={{
+                                            flex: 1, padding: '6px', borderRadius: '6px', fontSize: '12px', whiteSpace: 'nowrap',
+                                            background: fbMode === 'NATIVE' ? 'white' : 'transparent',
+                                            boxShadow: fbMode === 'NATIVE' ? '0 1px 2px rgba(0,0,0,0.1)' : 'none',
+                                            fontWeight: fbMode === 'NATIVE' ? '600' : 'normal',
+                                            color: fbMode === 'NATIVE' ? '#1877F2' : '#666',
+                                            border: 'none', cursor: 'pointer'
+                                        }}
+                                    >
+                                        Perfil (Nativo)
+                                    </button>
+                                </div>
+
+                                {fbMode === 'PAGE' && (
+                                    <>
+                                        <label style={{ display: 'block', marginBottom: '8px', fontWeight: '500' }}>Selecciona una Página:</label>
+                                        <div style={{ position: 'relative' }}>
+                                            <button
+                                                onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                                                style={{
+                                                    width: '100%',
+                                                    padding: '12px',
+                                                    borderRadius: '8px',
+                                                    border: '1px solid #dbdbdb',
+                                                    backgroundColor: 'white',
+                                                    color: '#333',
+                                                    fontSize: '16px',
+                                                    textAlign: 'left',
+                                                    display: 'flex',
+                                                    justifyContent: 'space-between',
+                                                    alignItems: 'center',
+                                                    cursor: 'pointer'
+                                                }}
+                                            >
+                                                <span>
+                                                    {facebookPages.find(p => p.id === selectedPageId)?.name || 'Selecciona una página...'}
+                                                </span>
+                                                <span style={{ transform: isDropdownOpen ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.2s' }}>▼</span>
+                                            </button>
+
+                                            {isDropdownOpen && (
+                                                <div style={{
+                                                    position: 'absolute',
+                                                    top: '100%',
+                                                    left: 0,
+                                                    right: 0,
+                                                    marginTop: '4px',
+                                                    backgroundColor: 'white',
+                                                    border: '1px solid #dbdbdb',
+                                                    borderRadius: '8px',
+                                                    boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+                                                    zIndex: 1000,
+                                                    maxHeight: '200px',
+                                                    overflowY: 'auto'
+                                                }}>
+                                                    {facebookPages.map(page => (
+                                                        <div
+                                                            key={page.id}
+                                                            onClick={() => {
+                                                                setSelectedPageId(page.id);
+                                                                setIsDropdownOpen(false);
+                                                            }}
+                                                            style={{
+                                                                padding: '12px',
+                                                                cursor: 'pointer',
+                                                                backgroundColor: selectedPageId === page.id ? '#f0f9ff' : 'white',
+                                                                color: selectedPageId === page.id ? '#0095f6' : '#333',
+                                                                borderBottom: '1px solid #f0f0f0'
+                                                            }}
+                                                            onMouseEnter={(e) => {
+                                                                if (selectedPageId !== page.id) e.target.style.backgroundColor = '#fafafa';
+                                                            }}
+                                                            onMouseLeave={(e) => {
+                                                                if (selectedPageId !== page.id) e.target.style.backgroundColor = 'white';
+                                                            }}
+                                                        >
+                                                            {page.name}
+                                                        </div>
+                                                    ))}
+                                                    {facebookPages.length === 0 && (
+                                                        <div style={{ padding: '12px', color: '#999', textAlign: 'center' }}>
+                                                            No se encontraron páginas
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            )}
+                                        </div>
+                                        {facebookPages.length === 0 && <p style={{ fontSize: '12px', color: '#e67e22', marginTop: '4px' }}>No se encontraron páginas administradas.</p>}
+                                    </>
+                                )}
+
+                                {fbMode === 'PERSONAL' && (
+                                    <div style={{ padding: '10px', background: '#e7f3ff', borderRadius: '8px', fontSize: '13px', color: '#1877F2' }}>
+                                        ℹ️ Se compartirá como un <strong>enlace multimedia</strong>. Facebook generará una tarjeta visual.
+                                    </div>
+                                )}
+
+                                {fbMode === 'NATIVE' && (
+                                    <div style={{ padding: '10px', background: '#e7f3ff', borderRadius: '8px', fontSize: '13px', color: '#1877F2' }}>
+                                        ℹ️ <strong>Mejor Calidad Visual:</strong> La App te ayudará a descargar el video y copiar el texto para que lo subas "nativamente" a Facebook.
+                                    </div>
+                                )}
+                            </div>
+                        )}
+
+                        {destination === 'INSTAGRAM' && postType === 'STORY' ? (
+                            <div style={{
+                                marginBottom: '20px',
+                                padding: '15px',
+                                backgroundColor: '#fff3cd',
+                                color: '#856404',
+                                borderRadius: '8px',
+                                border: '1px solid #ffeeba',
+                                fontSize: '14px',
+                                textAlign: 'center'
+                            }}>
+                                <strong>⚠️ Importante</strong><br />
+                                La API de Instagram NO permite añadir texto a las Historias automáticamente.<br />
+                                La imagen se subirá tal cual.
+                            </div>
+                        ) : (
+                            <>
+                                <textarea
+                                    value={caption}
+                                    onChange={(e) => setCaption(e.target.value)}
+                                    placeholder="Escribe una descripción..."
+                                    style={{ width: '100%', minHeight: '80px', padding: '8px', borderRadius: '8px', border: '1px solid #dbdbdb', marginBottom: '12px', fontFamily: 'inherit', boxSizing: 'border-box' }}
+                                />
+
+                                {/* Suggested Texts CTA */}
+                                {suggestedTexts.length > 0 && (
+                                    <div style={{ marginBottom: '12px' }}>
+                                        <button
+                                            onClick={() => {
+                                                setSuggestedTextMode('SET_CAPTION');
+                                                setIsSuggestedTextsModalOpen(true);
+                                            }}
+                                            style={{
+                                                background: 'none',
+                                                border: 'none',
+                                                color: '#0095f6',
+                                                cursor: 'pointer',
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                gap: '6px',
+                                                fontSize: '14px',
+                                                fontWeight: '500',
+                                                padding: 0
+                                            }}
+                                        >
+                                            <MessageSquareText size={16} /> Ver descripciones sugeridas ({suggestedTexts.length})
+                                        </button>
+                                    </div>
+                                )}
+
+
+
+                                <QuickHashtags onAddTag={(tag) => setCaption(prev => prev ? prev + " " + tag : tag)} />
+                            </>
+                        )}
+
+                        <button className="btn" onClick={handlePost} disabled={posting || ((destination === 'INSTAGRAM' && postType !== 'STORY' && !caption) || (destination === 'TIKTOK' && !caption))}>
+                            {posting ? <Loader2 className="animate-spin" size={20} /> :
+                                (destination === 'FACEBOOK' && fbMode === 'NATIVE') ? <Download size={20} /> : <Send size={20} />
+                            }
+                            {posting ? 'Procesando...' :
+                                destination === 'INSTAGRAM' ? (postType === 'STORY' ? 'Publicar Historia (Sin Texto)' : `Publicar en ${postType === 'FEED' ? 'Instagram Post' : 'Instagram Reel'}`) :
+                                    destination === 'TIKTOK' ? 'Publicar en TikTok' :
+                                        (fbMode === 'NATIVE' ? 'Descargar y Copiar' : 'Publicar en Facebook')
+                            }
+                        </button>
+                    </div>
+                )}
+            </div>
+            {/* Suggested Texts Modal (Moved to root) */}
+            {isSuggestedTextsModalOpen && (
+                <div style={{
+                    position: 'fixed',
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    backgroundColor: 'rgba(0,0,0,0.5)',
+                    zIndex: 1000,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    padding: '20px'
+                }} onClick={() => setIsSuggestedTextsModalOpen(false)}>
+                    <div style={{
+                        backgroundColor: 'white',
+                        borderRadius: '12px',
+                        padding: '20px',
+                        width: '100%',
+                        maxWidth: '500px',
+                        maxHeight: '80vh',
+                        overflowY: 'auto',
+                        position: 'relative',
+                        boxShadow: '0 4px 12px rgba(0,0,0,0.15)'
+                    }} onClick={e => e.stopPropagation()}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', borderBottom: '1px solid #eee', paddingBottom: '12px' }}>
+                            <h3 style={{ margin: 0, fontSize: '18px' }}>
+                                {suggestedTextMode === 'COPY' ? 'Copiar descripción' : 'Descripciones Sugeridas'}
+                            </h3>
+                            <button onClick={() => setIsSuggestedTextsModalOpen(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#666' }}>
+                                <X size={24} />
+                            </button>
+                        </div>
+
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                            {suggestedTexts.map((text, idx) => (
+                                <div
+                                    key={idx}
+                                    onClick={() => {
+                                        if (suggestedTextMode === 'COPY') {
+                                            navigator.clipboard.writeText(text).then(() => {
+                                                setCopyFeedback("Copiado al portapapeles");
+                                                setTimeout(() => setCopyFeedback(''), 2000);
+                                            }).catch(err => {
+                                                console.error("Failed to copy", err);
+                                            });
+                                        } else {
+                                            setCaption(text);
+                                            setIsSuggestedTextsModalOpen(false);
+                                        }
+                                    }}
+                                    style={{
+                                        padding: '12px',
+                                        border: '1px solid #e0e0e0',
+                                        borderRadius: '8px',
+                                        cursor: 'pointer',
+                                        fontSize: '14px',
+                                        lineHeight: '1.5',
+                                        whiteSpace: 'pre-wrap', // Preserve newlines
+                                        transition: 'background-color 0.2s',
+                                        backgroundColor: '#fafafa'
+                                    }}
+                                    onMouseEnter={e => e.currentTarget.style.backgroundColor = '#f0f9ff'}
+                                    onMouseLeave={e => e.currentTarget.style.backgroundColor = '#fafafa'}
+                                >
+                                    {text}
+                                </div>
+                            ))}
+                            {copyFeedback && (
+                                <div style={{
+                                    position: 'sticky',
+                                    bottom: '0',
+                                    marginTop: '8px',
+                                    padding: '10px',
+                                    backgroundColor: '#333',
+                                    color: 'white',
+                                    textAlign: 'center',
+                                    borderRadius: '8px',
+                                    fontSize: '14px',
+                                    fontWeight: '500',
+                                    boxShadow: '0 2px 8px rgba(0,0,0,0.2)',
+                                    animation: 'fadeIn 0.3s ease-out'
+                                }}>
+                                    {copyFeedback}
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            )}
+        </div>
+    );
+};
+
+export default AssetDetail;
