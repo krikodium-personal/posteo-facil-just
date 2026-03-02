@@ -831,7 +831,9 @@ body {
   flex-direction: row;
   align-items: flex-start;
   padding: 0px;
-  width: 100%;
+  width: calc(100% + 32px);
+  margin-left: -16px;
+  margin-right: -16px;
   height: 52px;
   background: #FFFFFF;
 }
