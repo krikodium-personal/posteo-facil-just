@@ -253,8 +253,8 @@ body {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  display: inline-block;
-  flex: 0 1 auto;
+  display: block;
+  flex: 0 10 auto;
   min-width: 24px;
 }
 
@@ -272,14 +272,11 @@ body {
   line-height: 20px;
   color: #171A22;
   /* Neutrals/900 */
-  display: -webkit-box;
-  -webkit-line-clamp: 1;
-  line-clamp: 1;
-  -webkit-box-orient: vertical;
+  white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  white-space: normal;
-  flex: 1;
+  display: block;
+  flex: 0 1 auto;
 }
 
 /* Card Styles */
@@ -383,14 +380,11 @@ body {
   font-size: 14px;
   line-height: 20px;
   color: var(--neutral-900);
-  display: -webkit-box;
-  -webkit-line-clamp: 1;
-  line-clamp: 1;
-  -webkit-box-orient: vertical;
+  white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  white-space: normal;
-  flex: 1;
+  display: block;
+  flex: 0 1 auto;
 }
 
 .category-card.card-v3 {
