@@ -809,7 +809,7 @@ const AssetDetail = () => {
                                         setIsSuggestedTextsModalOpen(true);
                                     }}
                                 >
-                                    <SuggestedTextsIconSmall /> Ver descripciones sugeridas
+                                    <SuggestedTextsIconSmall /> Ver descripciones sugeridas ({suggestedTexts.length})
                                 </button>
                             )}
                         </div>

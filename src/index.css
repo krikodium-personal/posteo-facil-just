@@ -775,6 +775,7 @@ body {
   width: 100%;
   height: 24px;
   justify-content: space-between;
+  margin-bottom: 24px;
 }
 
 .asset-detail-user-content {

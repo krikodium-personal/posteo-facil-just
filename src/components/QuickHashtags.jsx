@@ -11,9 +11,21 @@ const HASHTAGS = [
 const QuickHashtags = ({ onAddTag }) => {
     return (
         <div style={{ marginTop: '12px', marginBottom: '16px' }}>
-            <p style={{ fontSize: '13px', color: '#666', marginBottom: '8px' }}>
-                Haz click en los siguientes hashtags para agregarlos a la descripción de tu publicación:
-            </p>
+            <span style={{
+                fontFamily: "'Museo Sans'",
+                fontStyle: 'normal',
+                fontWeight: 400,
+                fontSize: '12px',
+                lineHeight: '18px',
+                display: 'flex',
+                alignItems: 'center',
+                letterSpacing: '0.02em',
+                textTransform: 'uppercase',
+                color: '#908F9A',
+                marginBottom: '16px',
+            }}>
+                Agrega Hashtags a tu posteo:
+            </span>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
                 {HASHTAGS.map(tag => (
                     <button
