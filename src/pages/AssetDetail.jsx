@@ -784,8 +784,117 @@ const AssetDetail = () => {
                             </div>
                         )}
 
+                        {destination === 'FACEBOOK' && (
+                            <div style={{ display: 'flex', flexDirection: 'column', width: '100%' }}>
+                                <div className="asset-detail-tabs-container">
+                                    <div className="asset-detail-tabs">
+                                        {[
+                                            { id: 'PAGE', label: 'Página (Auto)' },
+                                            { id: 'PERSONAL', label: 'Perfil (Link)' },
+                                            { id: 'NATIVE', label: 'Perfil (Nativo)' }
+                                        ].map(type => (
+                                            <div
+                                                key={type.id}
+                                                className={`asset-detail-tab-item ${fbMode === type.id ? 'active' : ''}`}
+                                                onClick={() => setFbMode(type.id)}
+                                            >
+                                                <span className="asset-detail-tab-text">{type.label}</span>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                {fbMode === 'PAGE' && (
+                                    <div className="asset-detail-fb-select-container" style={{ marginBottom: '24px' }}>
+                                        <div className="asset-detail-fb-select-label-row">
+                                            <span className="asset-detail-fb-select-label">Selecciona una Página:</span>
+                                        </div>
+                                        <div style={{ position: 'relative', width: '100%' }}>
+                                            <button
+                                                className="asset-detail-fb-select-field"
+                                                onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                                            >
+                                                <div className="asset-detail-fb-select-content">
+                                                    <span>{facebookPages.find(p => p.id === selectedPageId)?.name || 'Selecciona una página...'}</span>
+                                                </div>
+                                                <div className="asset-detail-fb-select-chevron">
+                                                    <span style={{ transform: isDropdownOpen ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.2s', display: 'flex' }}>
+                                                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                            <path d="M7 10L12 15L17 10" stroke="#5AAFF1" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                                                        </svg>
+                                                    </span>
+                                                </div>
+                                            </button>
+
+                                            {isDropdownOpen && (
+                                                <div style={{
+                                                    position: 'absolute',
+                                                    top: '100%',
+                                                    left: 0,
+                                                    right: 0,
+                                                    marginTop: '4px',
+                                                    backgroundColor: 'white',
+                                                    border: '1px solid #CED2FF',
+                                                    borderRadius: '16px',
+                                                    boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+                                                    zIndex: 1000,
+                                                    maxHeight: '200px',
+                                                    overflowY: 'auto'
+                                                }}>
+                                                    {facebookPages.map(page => (
+                                                        <div
+                                                            key={page.id}
+                                                            onClick={() => {
+                                                                setSelectedPageId(page.id);
+                                                                setIsDropdownOpen(false);
+                                                            }}
+                                                            style={{
+                                                                padding: '12px 16px',
+                                                                cursor: 'pointer',
+                                                                backgroundColor: selectedPageId === page.id ? '#f0f9ff' : 'white',
+                                                                color: selectedPageId === page.id ? '#0095f6' : '#333',
+                                                                borderBottom: '1px solid #f0f0f0',
+                                                                fontFamily: 'Museo Sans',
+                                                                fontSize: '16px'
+                                                            }}
+                                                            onMouseEnter={(e) => {
+                                                                if (selectedPageId !== page.id) e.target.style.backgroundColor = '#fafafa';
+                                                            }}
+                                                            onMouseLeave={(e) => {
+                                                                if (selectedPageId !== page.id) e.target.style.backgroundColor = 'white';
+                                                            }}
+                                                        >
+                                                            {page.name}
+                                                        </div>
+                                                    ))}
+                                                    {facebookPages.length === 0 && (
+                                                        <div style={{ padding: '12px', color: '#999', textAlign: 'center', fontFamily: 'Museo Sans' }}>
+                                                            No se encontraron páginas
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            )}
+                                        </div>
+                                        {facebookPages.length === 0 && <p style={{ fontSize: '12px', color: '#e67e22', marginTop: '4px', fontFamily: 'Museo Sans' }}>No se encontraron páginas administradas.</p>}
+                                    </div>
+                                )}
+
+                                {fbMode === 'PERSONAL' && (
+                                    <div style={{ padding: '10px', background: '#e7f3ff', borderRadius: '8px', fontSize: '13px', color: '#1877F2', marginBottom: '24px' }}>
+                                        ℹ️ Se compartirá como un <strong>enlace multimedia</strong>. Facebook generará una tarjeta visual.
+                                    </div>
+                                )}
+
+                                {fbMode === 'NATIVE' && (
+                                    <div style={{ padding: '10px', background: '#e7f3ff', borderRadius: '8px', fontSize: '13px', color: '#1877F2', marginBottom: '24px' }}>
+                                        ℹ️ <strong>Mejor Calidad Visual:</strong> La App te ayudará a descargar el video y copiar el texto para que lo subas "nativamente" a Facebook.
+                                    </div>
+                                )}
+                            </div>
+                        )}
+
                         {!(destination === 'INSTAGRAM' && postType === 'STORY') && (
-                            <div className="asset-detail-inputs-container" style={{ marginTop: destination === 'INSTAGRAM' ? '0' : '24px' }}>
+                            <div className="asset-detail-inputs-container">
                                 <div className="asset-detail-textarea-group">
                                     <div className="asset-detail-textarea-header">
                                         <span className="asset-detail-textarea-label">Texto de la publicación</span>
@@ -812,143 +921,6 @@ const AssetDetail = () => {
                                     >
                                         <SuggestedTextsIconSmall /> Ver descripciones sugeridas ({suggestedTexts.length})
                                     </button>
-                                )}
-                            </div>
-                        )}
-
-                        {destination === 'FACEBOOK' && (
-                            <div style={{ marginBottom: '16px' }}>
-                                {/* Toggle Mode */}
-                                <div style={{ display: 'flex', gap: '8px', marginBottom: '12px', background: '#f0f2f5', padding: '4px', borderRadius: '8px', overflowX: 'auto' }}>
-                                    <button
-                                        onClick={() => setFbMode('PAGE')}
-                                        style={{
-                                            flex: 1, padding: '6px', borderRadius: '6px', fontSize: '12px', whiteSpace: 'nowrap',
-                                            background: fbMode === 'PAGE' ? 'white' : 'transparent',
-                                            boxShadow: fbMode === 'PAGE' ? '0 1px 2px rgba(0,0,0,0.1)' : 'none',
-                                            fontWeight: fbMode === 'PAGE' ? '600' : 'normal',
-                                            color: fbMode === 'PAGE' ? '#1877F2' : '#666',
-                                            border: 'none', cursor: 'pointer'
-                                        }}
-                                    >
-                                        Página (Auto)
-                                    </button>
-                                    <button
-                                        onClick={() => setFbMode('PERSONAL')}
-                                        style={{
-                                            flex: 1, padding: '6px', borderRadius: '6px', fontSize: '12px', whiteSpace: 'nowrap',
-                                            background: fbMode === 'PERSONAL' ? 'white' : 'transparent',
-                                            boxShadow: fbMode === 'PERSONAL' ? '0 1px 2px rgba(0,0,0,0.1)' : 'none',
-                                            fontWeight: fbMode === 'PERSONAL' ? '600' : 'normal',
-                                            color: fbMode === 'PERSONAL' ? '#1877F2' : '#666',
-                                            border: 'none', cursor: 'pointer'
-                                        }}
-                                    >
-                                        Perfil (Link)
-                                    </button>
-                                    <button
-                                        onClick={() => setFbMode('NATIVE')}
-                                        style={{
-                                            flex: 1, padding: '6px', borderRadius: '6px', fontSize: '12px', whiteSpace: 'nowrap',
-                                            background: fbMode === 'NATIVE' ? 'white' : 'transparent',
-                                            boxShadow: fbMode === 'NATIVE' ? '0 1px 2px rgba(0,0,0,0.1)' : 'none',
-                                            fontWeight: fbMode === 'NATIVE' ? '600' : 'normal',
-                                            color: fbMode === 'NATIVE' ? '#1877F2' : '#666',
-                                            border: 'none', cursor: 'pointer'
-                                        }}
-                                    >
-                                        Perfil (Nativo)
-                                    </button>
-                                </div>
-
-                                {fbMode === 'PAGE' && (
-                                    <>
-                                        <label style={{ display: 'block', marginBottom: '8px', fontWeight: '500' }}>Selecciona una Página:</label>
-                                        <div style={{ position: 'relative' }}>
-                                            <button
-                                                onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                                                style={{
-                                                    width: '100%',
-                                                    padding: '12px',
-                                                    borderRadius: '8px',
-                                                    border: '1px solid #dbdbdb',
-                                                    backgroundColor: 'white',
-                                                    color: '#333',
-                                                    fontSize: '16px',
-                                                    textAlign: 'left',
-                                                    display: 'flex',
-                                                    justifyContent: 'space-between',
-                                                    alignItems: 'center',
-                                                    cursor: 'pointer'
-                                                }}
-                                            >
-                                                <span>
-                                                    {facebookPages.find(p => p.id === selectedPageId)?.name || 'Selecciona una página...'}
-                                                </span>
-                                                <span style={{ transform: isDropdownOpen ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.2s' }}>▼</span>
-                                            </button>
-
-                                            {isDropdownOpen && (
-                                                <div style={{
-                                                    position: 'absolute',
-                                                    top: '100%',
-                                                    left: 0,
-                                                    right: 0,
-                                                    marginTop: '4px',
-                                                    backgroundColor: 'white',
-                                                    border: '1px solid #dbdbdb',
-                                                    borderRadius: '8px',
-                                                    boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
-                                                    zIndex: 1000,
-                                                    maxHeight: '200px',
-                                                    overflowY: 'auto'
-                                                }}>
-                                                    {facebookPages.map(page => (
-                                                        <div
-                                                            key={page.id}
-                                                            onClick={() => {
-                                                                setSelectedPageId(page.id);
-                                                                setIsDropdownOpen(false);
-                                                            }}
-                                                            style={{
-                                                                padding: '12px',
-                                                                cursor: 'pointer',
-                                                                backgroundColor: selectedPageId === page.id ? '#f0f9ff' : 'white',
-                                                                color: selectedPageId === page.id ? '#0095f6' : '#333',
-                                                                borderBottom: '1px solid #f0f0f0'
-                                                            }}
-                                                            onMouseEnter={(e) => {
-                                                                if (selectedPageId !== page.id) e.target.style.backgroundColor = '#fafafa';
-                                                            }}
-                                                            onMouseLeave={(e) => {
-                                                                if (selectedPageId !== page.id) e.target.style.backgroundColor = 'white';
-                                                            }}
-                                                        >
-                                                            {page.name}
-                                                        </div>
-                                                    ))}
-                                                    {facebookPages.length === 0 && (
-                                                        <div style={{ padding: '12px', color: '#999', textAlign: 'center' }}>
-                                                            No se encontraron páginas
-                                                        </div>
-                                                    )}
-                                                </div>
-                                            )}
-                                        </div>
-                                        {facebookPages.length === 0 && <p style={{ fontSize: '12px', color: '#e67e22', marginTop: '4px' }}>No se encontraron páginas administradas.</p>}
-                                    </>
-                                )}
-
-                                {fbMode === 'PERSONAL' && (
-                                    <div style={{ padding: '10px', background: '#e7f3ff', borderRadius: '8px', fontSize: '13px', color: '#1877F2' }}>
-                                        ℹ️ Se compartirá como un <strong>enlace multimedia</strong>. Facebook generará una tarjeta visual.
-                                    </div>
-                                )}
-
-                                {fbMode === 'NATIVE' && (
-                                    <div style={{ padding: '10px', background: '#e7f3ff', borderRadius: '8px', fontSize: '13px', color: '#1877F2' }}>
-                                        ℹ️ <strong>Mejor Calidad Visual:</strong> La App te ayudará a descargar el video y copiar el texto para que lo subas "nativamente" a Facebook.
-                                    </div>
                                 )}
                             </div>
                         )}
