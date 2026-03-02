@@ -878,6 +878,7 @@ body {
   padding: 11px 16px;
   gap: 8px;
   width: 100%;
+  box-sizing: border-box;
   background: #FEFBEC;
   border-radius: 8px;
 }
