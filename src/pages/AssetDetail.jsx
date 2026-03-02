@@ -752,59 +752,67 @@ const AssetDetail = () => {
                             </div>
                         ) : null}
 
-                        <div style={{ marginBottom: '10px', color: 'green', fontSize: '14px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                                <span>✓ Conectado como</span>
-                                {destination === 'INSTAGRAM' ? (
-                                    <span style={{ fontWeight: '600' }}>@{localStorage.getItem('instagram_username')}</span>
-                                ) : destination === 'TIKTOK' ? (
-                                    <span style={{ fontWeight: '600' }}>{localStorage.getItem('tiktok_username')}</span>
-                                ) : (
-                                    <span style={{ fontWeight: '600' }}>Usuario Facebook</span>
-                                )}
+                        <div className="asset-detail-user-fila">
+                            <div className="asset-detail-user-content">
+                                <div className="asset-detail-user-status"><CheckCircleIconSmall /></div>
+                                <span className="asset-detail-user-text">
+                                    Conectado como {destination === 'INSTAGRAM' ? `@${localStorage.getItem('instagram_username')}` : destination === 'TIKTOK' ? localStorage.getItem('tiktok_username') : 'Usuario Facebook'}
+                                </span>
                             </div>
-                            <button
-                                onClick={() => handleDisconnect(destination)}
-                                style={{
-                                    background: 'none',
-                                    border: 'none',
-                                    padding: '2px 8px',
-                                    fontSize: '12px',
-                                    cursor: 'pointer',
-                                    color: '#5AAFF1',
-                                    textDecoration: 'underline'
-                                }}
-                            >
-                                Desconectar
+                            <button className="asset-detail-user-disconnect" onClick={() => handleDisconnect(destination)}>
+                                <DisconnectIconMedium />
                             </button>
                         </div>
+
                         {destination === 'INSTAGRAM' && (
-                            <div style={{ display: 'flex', gap: '8px', marginBottom: '16px' }}>
-                                {[
-                                    { id: 'FEED', label: 'Posteo', icon: '🖼️' },
-                                    { id: 'STORY', label: 'Historia', icon: '⏱️' },
-                                    ...(asset.type === 'video' ? [{ id: 'REEL', label: 'Reel', icon: '🎬' }] : [])
-                                ].map(type => (
-                                    <button
-                                        key={type.id}
-                                        onClick={() => setPostType(type.id)}
-                                        style={{
-                                            flex: 1,
-                                            padding: '8px',
-                                            borderRadius: '8px',
-                                            border: postType === type.id ? '2px solid #E1306C' : '1px solid #dbdbdb',
-                                            background: postType === type.id ? '#fff0f5' : 'white',
-                                            color: postType === type.id ? '#E1306C' : '#333',
-                                            cursor: 'pointer',
-                                            fontWeight: postType === type.id ? 'bold' : 'normal'
-                                        }}
-                                    >
-                                        <span style={{ marginRight: '4px' }}>{type.icon}</span>
-                                        {type.label}
-                                    </button>
-                                ))}
+                            <div className="asset-detail-tabs-container">
+                                <div className="asset-detail-tabs">
+                                    {[
+                                        { id: 'FEED', label: 'Posteo' },
+                                        { id: 'STORY', label: 'Historia' },
+                                        ...(asset.type === 'video' ? [{ id: 'REEL', label: 'Reel' }] : [])
+                                    ].map(type => (
+                                        <div
+                                            key={type.id}
+                                            className={`asset-detail-tab-item ${postType === type.id ? 'active' : ''}`}
+                                            onClick={() => setPostType(type.id)}
+                                        >
+                                            <span className="asset-detail-tab-text">{type.label}</span>
+                                        </div>
+                                    ))}
+                                </div>
                             </div>
                         )}
+
+                        <div className="asset-detail-inputs-container" style={{ marginTop: destination === 'INSTAGRAM' ? '0' : '24px' }}>
+                            <div className="asset-detail-textarea-group">
+                                <div className="asset-detail-textarea-header">
+                                    <span className="asset-detail-textarea-label">Texto de la publicación</span>
+                                    <span className="asset-detail-textarea-counter" style={{ opacity: caption.length > 0 ? 1 : 0.5 }}>{caption.length}/2200</span>
+                                </div>
+                                <div className="asset-detail-textarea-box">
+                                    <textarea
+                                        className="asset-detail-textarea-input"
+                                        placeholder="Escribe el texto de tu publicación aquí..."
+                                        value={caption}
+                                        onChange={(e) => setCaption(e.target.value)}
+                                        maxLength={2200}
+                                    />
+                                </div>
+                            </div>
+
+                            {suggestedTexts.length > 0 && (
+                                <button
+                                    className="asset-detail-suggested-texts-btn"
+                                    onClick={() => {
+                                        setSuggestedTextMode('INSERT');
+                                        setIsSuggestedTextsModalOpen(true);
+                                    }}
+                                >
+                                    <SuggestedTextsIconSmall /> Ver descripciones sugeridas
+                                </button>
+                            )}
+                        </div>
 
                         {destination === 'FACEBOOK' && (
                             <div style={{ marginBottom: '16px' }}>
@@ -959,44 +967,7 @@ const AssetDetail = () => {
                                 La imagen se subirá tal cual.
                             </div>
                         ) : (
-                            <>
-                                <textarea
-                                    value={caption}
-                                    onChange={(e) => setCaption(e.target.value)}
-                                    placeholder="Escribe una descripción..."
-                                    style={{ width: '100%', minHeight: '80px', padding: '8px', borderRadius: '8px', border: '1px solid #dbdbdb', marginBottom: '12px', fontFamily: 'inherit', boxSizing: 'border-box' }}
-                                />
-
-                                {/* Suggested Texts CTA */}
-                                {suggestedTexts.length > 0 && (
-                                    <div style={{ marginBottom: '12px' }}>
-                                        <button
-                                            onClick={() => {
-                                                setSuggestedTextMode('SET_CAPTION');
-                                                setIsSuggestedTextsModalOpen(true);
-                                            }}
-                                            style={{
-                                                background: 'none',
-                                                border: 'none',
-                                                color: '#0095f6',
-                                                cursor: 'pointer',
-                                                display: 'flex',
-                                                alignItems: 'center',
-                                                gap: '6px',
-                                                fontSize: '14px',
-                                                fontWeight: '500',
-                                                padding: 0
-                                            }}
-                                        >
-                                            <MessageSquareText size={16} /> Ver descripciones sugeridas ({suggestedTexts.length})
-                                        </button>
-                                    </div>
-                                )}
-
-
-
-                                <QuickHashtags onAddTag={(tag) => setCaption(prev => prev ? prev + " " + tag : tag)} />
-                            </>
+                            <QuickHashtags onAddTag={(tag) => setCaption(prev => prev ? prev + " " + tag : tag)} />
                         )}
 
                         <button className="asset-detail-main-btn" onClick={handlePost} disabled={posting || ((destination === 'INSTAGRAM' && postType !== 'STORY' && !caption) || (destination === 'TIKTOK' && !caption))}>

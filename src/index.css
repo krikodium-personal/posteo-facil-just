@@ -765,6 +765,206 @@ body {
   color: #5AAFF1;
 }
 
+/* Connected State UI */
+.asset-detail-user-fila {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  padding: 0px;
+  gap: 8px;
+  width: 100%;
+  height: 24px;
+  justify-content: space-between;
+}
+
+.asset-detail-user-content {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  padding: 0px;
+  gap: 4px;
+  flex-grow: 1;
+}
+
+.asset-detail-user-status {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  background: #16BE7D;
+  border-radius: 50%;
+}
+
+.asset-detail-user-text {
+  font-family: 'Museo Sans';
+  font-style: normal;
+  font-weight: 400;
+  font-size: 16px;
+  line-height: 24px;
+  color: #057848;
+}
+
+.asset-detail-user-disconnect {
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+}
+
+.asset-detail-tabs-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0px;
+  gap: 24px;
+  width: 100%;
+}
+
+.asset-detail-tabs {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  padding: 0px;
+  width: 100%;
+  height: 52px;
+  background: #FFFFFF;
+}
+
+.asset-detail-tab-item {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  padding: 10px 8px;
+  gap: 4px;
+  flex: 1;
+  height: 52px;
+  border-bottom: 1px solid #8889DB;
+  cursor: pointer;
+}
+
+.asset-detail-tab-item.active {
+  border-bottom: 3px solid #6667C2;
+}
+
+.asset-detail-tab-text {
+  font-family: 'Museo Sans';
+  font-style: normal;
+  font-weight: 600;
+  font-size: 14px;
+  line-height: 20px;
+  color: #8889DB;
+}
+
+.asset-detail-tab-item.active .asset-detail-tab-text {
+  color: #6667C2;
+}
+
+.asset-detail-inputs-container {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  padding: 0px;
+  gap: 16px;
+  width: 100%;
+}
+
+.asset-detail-textarea-group {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  padding: 0px;
+  gap: 8px;
+  width: 100%;
+}
+
+.asset-detail-textarea-header {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 0px;
+  width: 100%;
+  height: 20px;
+}
+
+.asset-detail-textarea-label {
+  font-family: 'Museo Sans';
+  font-style: normal;
+  font-weight: 600;
+  font-size: 14px;
+  line-height: 20px;
+  color: #171A22;
+}
+
+.asset-detail-textarea-counter {
+  font-family: 'DM Sans';
+  font-style: normal;
+  font-weight: 500;
+  font-size: 14px;
+  line-height: 20px;
+  color: #171A22;
+  opacity: 1;
+  /* Showing counter for text area */
+}
+
+.asset-detail-textarea-box {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  padding: 16px;
+  width: 100%;
+  height: 248px;
+  background: #FFFFFF;
+  border: 1px solid #CED2FF;
+  border-radius: 16px;
+}
+
+.asset-detail-textarea-input {
+  width: 100%;
+  height: 100%;
+  border: none;
+  resize: none;
+  font-family: 'Museo Sans';
+  font-style: normal;
+  font-weight: 400;
+  font-size: 16px;
+  line-height: 24px;
+  color: #908F9A;
+  /* Or #171A22 if filled, standard behavior handles that via state if needed, but styling placeholder here */
+  outline: none;
+  background: transparent;
+}
+
+.asset-detail-textarea-input:focus {
+  color: #171A22;
+}
+
+.asset-detail-suggested-texts-btn {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  padding: 0px;
+  gap: 4px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: #5AAFF1;
+  font-family: 'Museo Sans';
+  font-style: normal;
+  font-weight: 600;
+  font-size: 14px;
+  line-height: 20px;
+}
+
 .asset-detail-container-foto {
   display: flex;
   flex-direction: row;
