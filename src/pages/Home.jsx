@@ -406,7 +406,7 @@ const Home = () => {
                                                         ) : (
                                                             <>
                                                                 <button
-                                                                    className={`breadcrumb-link ${(!isFirst && !isLast) ? "is-truncated" : ""}`}
+                                                                    className="breadcrumb-link is-truncated"
                                                                     onClick={() => handleFolderClick(pathSoFar)}
                                                                 >
                                                                     {segment}
