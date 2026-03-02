@@ -975,91 +975,70 @@ const AssetDetail = () => {
             </div>
             {/* Suggested Texts Modal (Moved to root) */}
             {isSuggestedTextsModalOpen && (
-                <div style={{
-                    position: 'fixed',
-                    top: 0,
-                    left: 0,
-                    right: 0,
-                    bottom: 0,
-                    backgroundColor: 'rgba(0,0,0,0.5)',
-                    zIndex: 1000,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    padding: '20px'
-                }} onClick={() => setIsSuggestedTextsModalOpen(false)}>
-                    <div style={{
-                        backgroundColor: 'white',
-                        borderRadius: '12px',
-                        padding: '20px',
-                        width: '100%',
-                        maxWidth: '500px',
-                        maxHeight: '80vh',
-                        overflowY: 'auto',
-                        position: 'relative',
-                        boxShadow: '0 4px 12px rgba(0,0,0,0.15)'
-                    }} onClick={e => e.stopPropagation()}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', borderBottom: '1px solid #eee', paddingBottom: '12px' }}>
-                            <h3 style={{ margin: 0, fontSize: '18px' }}>
-                                {suggestedTextMode === 'COPY' ? 'Copiar descripción' : 'Descripciones Sugeridas'}
-                            </h3>
-                            <button onClick={() => setIsSuggestedTextsModalOpen(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#666' }}>
-                                <X size={24} />
-                            </button>
+                <div className="asset-detail-suggested-modal-overlay" onClick={() => setIsSuggestedTextsModalOpen(false)}>
+                    <div className="asset-detail-suggested-modal" onClick={e => e.stopPropagation()}>
+                        <button className="asset-detail-suggested-close" onClick={() => setIsSuggestedTextsModalOpen(false)}>
+                            <X size={24} color="#908F9A" />
+                        </button>
+
+                        <div className="asset-detail-suggested-container">
+                            <div className="asset-detail-suggested-header">
+                                <h3 className="asset-detail-suggested-title">
+                                    {suggestedTextMode === 'COPY' ? 'Copiar descripción' : 'Descripciones sugeridas'}
+                                </h3>
+                                <div className="asset-detail-suggested-divider"></div>
+                            </div>
+
+                            <div className="asset-detail-suggested-list">
+                                {suggestedTexts.map((text, idx) => (
+                                    <div
+                                        key={idx}
+                                        className="asset-detail-suggested-item"
+                                        onClick={() => {
+                                            if (suggestedTextMode === 'COPY') {
+                                                navigator.clipboard.writeText(text).then(() => {
+                                                    setCopyFeedback("Copiado al portapapeles");
+                                                    setTimeout(() => setCopyFeedback(''), 2000);
+                                                }).catch(err => {
+                                                    console.error("Failed to copy", err);
+                                                });
+                                            } else {
+                                                setCaption(text);
+                                                setIsSuggestedTextsModalOpen(false);
+                                            }
+                                        }}
+                                    >
+                                        <span className="asset-detail-suggested-item-text">{text}</span>
+                                    </div>
+                                ))}
+                                {copyFeedback && (
+                                    <div style={{
+                                        position: 'sticky',
+                                        bottom: '0',
+                                        marginTop: '8px',
+                                        padding: '10px',
+                                        backgroundColor: '#333',
+                                        color: 'white',
+                                        textAlign: 'center',
+                                        borderRadius: '8px',
+                                        fontSize: '14px',
+                                        fontWeight: '500',
+                                        boxShadow: '0 2px 8px rgba(0,0,0,0.2)',
+                                        animation: 'fadeIn 0.3s ease-out'
+                                    }}>
+                                        {copyFeedback}
+                                    </div>
+                                )}
+                            </div>
                         </div>
 
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                            {suggestedTexts.map((text, idx) => (
-                                <div
-                                    key={idx}
-                                    onClick={() => {
-                                        if (suggestedTextMode === 'COPY') {
-                                            navigator.clipboard.writeText(text).then(() => {
-                                                setCopyFeedback("Copiado al portapapeles");
-                                                setTimeout(() => setCopyFeedback(''), 2000);
-                                            }).catch(err => {
-                                                console.error("Failed to copy", err);
-                                            });
-                                        } else {
-                                            setCaption(text);
-                                            setIsSuggestedTextsModalOpen(false);
-                                        }
-                                    }}
-                                    style={{
-                                        padding: '12px',
-                                        border: '1px solid #e0e0e0',
-                                        borderRadius: '8px',
-                                        cursor: 'pointer',
-                                        fontSize: '14px',
-                                        lineHeight: '1.5',
-                                        whiteSpace: 'pre-wrap', // Preserve newlines
-                                        transition: 'background-color 0.2s',
-                                        backgroundColor: '#fafafa'
-                                    }}
-                                    onMouseEnter={e => e.currentTarget.style.backgroundColor = '#f0f9ff'}
-                                    onMouseLeave={e => e.currentTarget.style.backgroundColor = '#fafafa'}
-                                >
-                                    {text}
-                                </div>
-                            ))}
-                            {copyFeedback && (
-                                <div style={{
-                                    position: 'sticky',
-                                    bottom: '0',
-                                    marginTop: '8px',
-                                    padding: '10px',
-                                    backgroundColor: '#333',
-                                    color: 'white',
-                                    textAlign: 'center',
-                                    borderRadius: '8px',
-                                    fontSize: '14px',
-                                    fontWeight: '500',
-                                    boxShadow: '0 2px 8px rgba(0,0,0,0.2)',
-                                    animation: 'fadeIn 0.3s ease-out'
-                                }}>
-                                    {copyFeedback}
-                                </div>
-                            )}
+                        <div className="asset-detail-suggested-footer">
+                            <button
+                                className="asset-detail-suggested-footer-btn"
+                                onClick={() => setIsSuggestedTextsModalOpen(false)}
+                            >
+                                Volver al Posteo
+                            </button>
                         </div>
                     </div>
                 </div>
