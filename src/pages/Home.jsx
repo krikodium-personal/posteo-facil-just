@@ -53,7 +53,6 @@ const Home = () => {
 
         const fetchData = async () => {
             setLoading(true);
-            setCurrentBanner(null);
             try {
                 let data = [];
                 if (searchQuery.trim().length > 0) {
@@ -180,6 +179,7 @@ const Home = () => {
 
     const handleFolderClick = (path) => {
         if (isSelectionMode) return;
+        setCurrentBanner(null); // Clear banner when navigating to a new folder
         let nextPath = path;
         if (!path.startsWith('/')) {
             const safeRoot = APP_ROOT_PATH.endsWith('/') ? APP_ROOT_PATH.slice(0, -1) : APP_ROOT_PATH;
@@ -388,7 +388,7 @@ const Home = () => {
                                         <div className="breadcrumb-container">
                                             <button
                                                 className="breadcrumb-link"
-                                                onClick={() => setSearchParams({ country, path: APP_ROOT_PATH })}
+                                                onClick={() => handleFolderClick(APP_ROOT_PATH)}
                                                 style={{ background: 'none', border: 'none', padding: 0, flexShrink: 0 }}
                                             >
                                                 Inicio
