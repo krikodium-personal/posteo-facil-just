@@ -254,7 +254,7 @@ body {
   overflow: hidden;
   text-overflow: ellipsis;
   display: block;
-  flex: 0 10 auto;
+  flex: 0 99999 auto;
   min-width: 24px;
 }
 
