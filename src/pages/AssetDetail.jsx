@@ -733,7 +733,7 @@ const AssetDetail = () => {
                             <button
                                 onClick={handleNativeShare}
                                 disabled={posting}
-                                style={{ width: '100%', padding: '16px', borderRadius: '8px', border: 'none', background: '#0061FE', cursor: 'pointer', fontSize: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', color: 'white', fontWeight: '600', boxShadow: '0 4px 6px rgba(0,0,0,0.1)' }}
+                                style={{ width: '100%', padding: '16px', borderRadius: '8px', border: 'none', background: '#5AAFF1', cursor: 'pointer', fontSize: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', color: 'white', fontWeight: '700', fontFamily: 'Museo Sans', boxShadow: 'none' }}
                             >
                                 {posting ? 'Procesando...' : 'Publicar en mi cuenta'}
                                 {!posting && <Share2 size={20} />}
@@ -958,32 +958,11 @@ const AssetDetail = () => {
                             <QuickHashtags onAddTag={(tag) => setCaption(prev => prev ? prev + " " + tag : tag)} />
                         )}
 
-                        <button
-                            className="asset-detail-main-btn"
-                            onClick={handlePost}
-                            disabled={posting || ((destination === 'INSTAGRAM' && postType !== 'STORY' && !caption) || (destination === 'TIKTOK' && !caption))}
-                            style={
-                                (destination === 'FACEBOOK' && fbMode === 'NATIVE')
-                                    ? {
-                                        background: '#5AAFF1',
-                                        boxShadow: 'none',
-                                    } : {}
-                            }
-                        >
+                        <button className="asset-detail-main-btn" onClick={handlePost} disabled={posting || ((destination === 'INSTAGRAM' && postType !== 'STORY' && !caption) || (destination === 'TIKTOK' && !caption))}>
                             {posting ? <Loader2 className="animate-spin" size={20} color="#FFF" /> :
                                 (destination === 'FACEBOOK' && fbMode === 'NATIVE') ? <DownloadIconLarge color="#FFF" /> : <Send size={20} color="#FFF" />
                             }
-                            <span
-                                className="asset-detail-main-btn-text"
-                                style={
-                                    (destination === 'FACEBOOK' && fbMode === 'NATIVE')
-                                        ? {
-                                            fontFamily: 'Museo Sans',
-                                            fontWeight: 700,
-                                            fontSize: '16px'
-                                        } : {}
-                                }
-                            >
+                            <span className="asset-detail-main-btn-text">
                                 {posting ? 'Procesando...' :
                                     destination === 'INSTAGRAM' ? (postType === 'STORY' ? 'Publicar Historia (Sin Texto)' : `Publicar en ${postType === 'FEED' ? 'Instagram Post' : 'Instagram Reel'}`) :
                                         destination === 'TIKTOK' ? 'Publicar en TikTok' :
