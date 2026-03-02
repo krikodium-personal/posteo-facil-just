@@ -569,8 +569,7 @@ const Home = () => {
                                                                 } else if (currentBanner.display_layout === "card-small") {
                                                                     cardClass = "category-card card-small";
                                                                 } else if (currentBanner.display_layout === "asset-foto-grid") {
-                                                                    isListLevel = true;
-                                                                    cardClass = "folder-list-row";
+                                                                    cardClass = "photo-grid-folder-card";
                                                                 } else {
                                                                     cardClass = currentBanner.display_layout; // Pass-through
                                                                 }
@@ -597,6 +596,36 @@ const Home = () => {
                                                                         <span className="folder-title">{banner.title}</span>
                                                                     </div>
                                                                     <ChevronRight className="chevron-icon" color="#5AAFF1" size={16} />
+                                                                </div>
+                                                            );
+                                                        }
+
+                                                        // Handle specifically the photo-grid-folder-card HTML structure
+                                                        if (cardClass === "photo-grid-folder-card") {
+                                                            return (
+                                                                <div
+                                                                    key={banner.id}
+                                                                    className="photo-grid-folder-card"
+                                                                    onClick={() => {
+                                                                        let target = banner.target_path;
+                                                                        if (target && !target.startsWith('/')) {
+                                                                            const cleanGlobal = GLOBAL_ROOT_PATH.replace(/\/$/, '');
+                                                                            target = `${cleanGlobal}/${target}`;
+                                                                        }
+                                                                        handleFolderClick(target);
+                                                                    }}
+                                                                >
+                                                                    <div className="photo-grid-folder-img-container">
+                                                                        {banner.image ? (
+                                                                            <img src={getImageUrl(banner.image)} alt={banner.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                                                        ) : (
+                                                                            getFolderIcon(banner.display_type, banner.title, 48, "#456ECE")
+                                                                        )}
+                                                                    </div>
+                                                                    <div className="photo-grid-folder-caption">
+                                                                        <span className="photo-grid-folder-title">{banner.title}</span>
+                                                                        <ChevronRight className="photo-grid-folder-icon" size={16} />
+                                                                    </div>
                                                                 </div>
                                                             );
                                                         }

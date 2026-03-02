@@ -537,11 +537,6 @@ body {
   box-sizing: border-box;
 }
 
-.asset-foto-grid>.folder-list-row,
-.asset-foto-grid>.category-card {
-  grid-column: 1 / -1;
-}
-
 .asset-foto-card {
   width: 100%;
   aspect-ratio: 1 / 1;
