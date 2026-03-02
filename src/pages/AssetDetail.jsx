@@ -561,7 +561,7 @@ const AssetDetail = () => {
     const handleDestinationChange = (dest) => {
         setDestination(dest);
         setTimeout(() => {
-            scrollTargetRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            window.scrollTo({ top: document.documentElement.scrollHeight, behavior: 'smooth' });
         }, 100);
     };
 
