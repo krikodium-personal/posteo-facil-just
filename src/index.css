@@ -834,6 +834,7 @@ body {
   width: calc(100% + 32px);
   margin-left: -16px;
   margin-right: -16px;
+  margin-bottom: 24px;
   height: 52px;
   background: #FFFFFF;
 }
