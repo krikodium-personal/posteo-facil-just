@@ -874,7 +874,7 @@ body {
 .asset-detail-warning-message {
   display: flex;
   flex-direction: row;
-  align-items: center;
+  align-items: flex-start;
   padding: 11px 16px;
   gap: 8px;
   width: 100%;
@@ -883,16 +883,28 @@ body {
   border-radius: 8px;
 }
 
-.asset-detail-warning-text {
+.asset-detail-warning-text-container {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+.asset-detail-warning-title {
   font-family: 'Museo Sans';
   font-style: normal;
-  font-weight: 600;
+  font-weight: 700;
   font-size: 12px;
   line-height: 18px;
-  letter-spacing: 0.02em;
-  text-transform: uppercase;
   color: #2F3238;
-  flex: 1;
+}
+
+.asset-detail-warning-body {
+  font-family: 'Museo Sans';
+  font-style: normal;
+  font-weight: 500;
+  font-size: 12px;
+  line-height: 18px;
+  color: #2F3238;
 }
 
 .asset-detail-inputs-container {
