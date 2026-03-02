@@ -587,7 +587,7 @@ body {
   background-position: center;
 }
 
-.photo-grid-folder-footer {
+.photo-grid-folder-caption {
   display: flex;
   flex-direction: row;
   align-items: center;
