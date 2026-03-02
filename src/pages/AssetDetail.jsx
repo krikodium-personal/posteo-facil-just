@@ -9,6 +9,7 @@ import { getBanners } from '../services/DirectusService';
 import { ArrowLeft, Instagram, Send, Plus, Tag, ChevronLeft, ChevronRight, Music2, Facebook, Loader2, Download, Copy, ExternalLink, MessageSquareText, X, Share2 } from 'lucide-react';
 
 import QuickHashtags from '../components/QuickHashtags';
+import { InstagramIconLarge, TikTokIconLarge, FacebookIconLarge, ShareIconLarge, DownloadIconLarge, CopyLinkIconLarge } from '../components/SocialIcons';
 
 const AssetDetail = () => {
     const { id } = useParams();
@@ -292,34 +293,38 @@ const AssetDetail = () => {
     };
 
     const renderUnconnectedFallback = () => (
-        <div style={{ marginTop: '24px', padding: '20px', backgroundColor: '#f8f9fa', borderRadius: '12px', border: '1px solid #e9ecef' }}>
-            <h4 style={{ margin: '0 0 8px 0', fontSize: '16px', color: '#2c3e50', fontWeight: '600' }}>¿No pudiste conectar tu cuenta?</h4>
-            <p style={{ margin: '0 0 16px 0', fontSize: '14px', color: '#6c757d', lineHeight: '1.5' }}>No importa, igual puedes utilizar estos contenidos para postearlos en tus redes.</p>
+        <div className="asset-detail-message">
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', width: '100%' }}>
+                <h4 className="asset-detail-message-title">¿No pudiste conectar tu cuenta?</h4>
+                <p className="asset-detail-message-body">No importa, igual puedes utilizar estos contenidos para postearlos en tus redes.</p>
+            </div>
 
-            <p style={{ margin: '0 0 12px 0', fontSize: '14px', fontWeight: '600', color: '#34495e' }}>Sigue estos simples pasos:</p>
-            <ol style={{ margin: '0 0 20px 0', paddingLeft: '24px', fontSize: '14px', color: '#495057', lineHeight: '1.6' }}>
-                <li style={{ marginBottom: '6px' }}>Descarga el posteo</li>
-                <li style={{ marginBottom: '6px' }}>Selecciona y copia el texto sugerido para el posteo</li>
-                <li>Ingresa a tu red social y crea un nuevo posteo, selecciona el posteo que descargaste en tu carrete de imágenes y pega el texto sugerido.</li>
-            </ol>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', width: '100%' }}>
+                <p className="asset-detail-message-step-title">Sigue estos simples pasos:</p>
+                <p className="asset-detail-message-body">
+                    Descarga el posteo<br />
+                    Selecciona y copia el texto sugerido para el posteo<br />
+                    Ingresa a tu red social y crea un nuevo posteo, selecciona el posteo que descargaste en tu carrete de imágenes y pega el texto sugerido.
+                </p>
+            </div>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                {suggestedTexts.length > 0 && (
-                    <button
-                        onClick={() => {
-                            setSuggestedTextMode('COPY');
-                            setIsSuggestedTextsModalOpen(true);
-                        }}
-                        style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid #ced4da', background: 'white', cursor: 'pointer', fontSize: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', color: '#495057', fontWeight: '500' }}
-                    >
-                        <Copy size={18} /> Textos sugeridos
-                    </button>
-                )}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', width: '100%' }}>
                 <button
-                    onClick={handleDownload}
-                    style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid #ced4da', background: 'white', cursor: 'pointer', fontSize: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', color: '#495057', fontWeight: '500' }}
+                    className="asset-detail-main-btn asset-detail-main-btn-secondary"
+                    onClick={() => {
+                        setSuggestedTextMode('COPY');
+                        setIsSuggestedTextsModalOpen(true);
+                    }}
                 >
-                    <Download size={18} /> Descargar posteo
+                    <CopyLinkIconLarge />
+                    <span className="asset-detail-main-btn-text">Ver texto sugerido</span>
+                </button>
+                <button
+                    className="asset-detail-main-btn asset-detail-main-btn-secondary"
+                    onClick={handleDownload}
+                >
+                    <DownloadIconLarge />
+                    <span className="asset-detail-main-btn-text">Descargar posteo</span>
                 </button>
             </div>
         </div>
@@ -561,241 +566,159 @@ const AssetDetail = () => {
     };
 
     return (
-        <div className="detail-view">
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
-                <Link to={backLink} style={{ display: 'flex', alignItems: 'center', textDecoration: 'none', color: 'inherit' }}>
-                    <ArrowLeft size={20} /> <span style={{ marginLeft: '8px' }}>Atrás</span>
+        <div className="asset-detail-body">
+            <div className="asset-detail-header">
+                <Link to={backLink} className="asset-detail-header-btn-close">
+                    <ArrowLeft size={24} color="#171A22" />
                 </Link>
+                <h1 className="asset-detail-header-title">Posteo Fácil</h1>
+                <div style={{ width: 24 }} /> {/* Balance space-between */}
+            </div>
 
-                {/* Navigation Controls */}
-                {contextIds.length > 0 && (
-                    <div style={{ display: 'flex', gap: '8px' }}>
-                        <button
-                            onClick={() => navigateTo(prevId)}
-                            disabled={!prevId}
-                            style={{
-                                background: 'none',
-                                border: '1px solid #ddd',
-                                borderRadius: '50%',
-                                width: '32px',
-                                height: '32px',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                cursor: prevId ? 'pointer' : 'default',
-                                opacity: prevId ? 1 : 0.3
-                            }}
-                        >
-                            <ChevronLeft size={20} />
-                        </button>
-                        <button
-                            onClick={() => navigateTo(nextId)}
-                            disabled={!nextId}
-                            style={{
-                                background: 'none',
-                                border: '1px solid #ddd',
-                                borderRadius: '50%',
-                                width: '32px',
-                                height: '32px',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                cursor: nextId ? 'pointer' : 'default',
-                                opacity: nextId ? 1 : 0.3
-                            }}
-                        >
-                            <ChevronRight size={20} />
-                        </button>
+            <div className="asset-detail-content">
+                <div className="asset-detail-container">
+                    <div className="asset-detail-container-foto">
+                        {imageLoading && <div className="skeleton-box pulse" style={{ width: '100%', height: '100%', position: 'absolute' }}></div>}
+                        {asset.type === 'video' ? (
+                            <video
+                                src={asset.url}
+                                controls
+                                style={{ display: imageLoading ? 'none' : 'block' }}
+                                onLoadedData={() => setImageLoading(false)}
+                            />
+                        ) : (
+                            <img
+                                src={asset.url}
+                                alt={asset.title}
+                                style={{ display: imageLoading ? 'none' : 'block' }}
+                                onLoad={() => setImageLoading(false)}
+                            />
+                        )}
+                    </div>
+                </div>
+
+                {tags.length > 0 && (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', width: '100%' }}>
+                        <div style={{ fontSize: '12px', fontWeight: '400', lineHeight: '18px', letterSpacing: '0.02em', textTransform: 'uppercase', color: '#908F9A', fontFamily: 'Museo Sans' }}>
+                            Agrega Hashtags a tu posteo:
+                        </div>
+                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                            {tags.map((tag, i) => (
+                                <div key={i} className="tag-pill selected">
+                                    #{tag}
+                                </div>
+                            ))}
+                        </div>
                     </div>
                 )}
-            </div>
 
-            {imageLoading && <div className="skeleton-detail"></div>}
-
-            {asset.type === 'video' ? (
-                <video
-                    src={asset.url}
-                    controls
-                    className="detail-image"
-                    style={{
-                        height: '300px',
-                        width: '100%',
-                        objectFit: 'contain',
-                        backgroundColor: '#f0f0f0',
-                        display: imageLoading ? 'none' : 'block'
-                    }}
-                    onLoadedData={() => setImageLoading(false)}
-                />
-            ) : (
-                <img
-                    src={asset.url}
-                    alt={asset.title}
-                    className="detail-image"
-                    style={{
-                        height: '300px',
-                        width: '100%',
-                        objectFit: 'contain',
-                        backgroundColor: '#f0f0f0',
-                        display: imageLoading ? 'none' : 'block'
-                    }}
-                    onLoad={() => setImageLoading(false)}
-                />
-            )}
-
-            <div className="meta-info">
-                <h2>{asset.title}</h2>
-                <p>{asset.description}</p>
-                <small>{asset.date}</small>
-
-                <div style={{ marginTop: '16px', borderTop: '1px solid #eee', paddingTop: '16px' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', marginBottom: '8px' }}>
-                        <Tag size={16} style={{ marginRight: '6px', color: '#666' }} />
-                        <span style={{ fontWeight: '500', color: '#333' }}>Etiquetas</span>
+                <div className="asset-detail-plataforma" style={{ marginTop: tags.length > 0 ? 0 : '-16px' }}>
+                    <div className="asset-detail-fila">
+                        <button
+                            className={`asset-detail-rs ${destination === 'INSTAGRAM' ? 'instagram-selected' : ''}`}
+                            onClick={() => handleDestinationChange('INSTAGRAM')}
+                        >
+                            <InstagramIconLarge color={destination === 'INSTAGRAM' ? "#6667C2" : "#8889DB"} />
+                            <span className="asset-detail-rs-text">Instagram</span>
+                        </button>
+                        <button
+                            className={`asset-detail-rs ${destination === 'TIKTOK' ? 'tiktok-selected' : ''}`}
+                            onClick={() => handleDestinationChange('TIKTOK')}
+                        >
+                            <TikTokIconLarge color={destination === 'TIKTOK' ? "#171A22" : "#8889DB"} />
+                            <span className="asset-detail-rs-text">TikTok</span>
+                        </button>
                     </div>
-
-                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginBottom: '12px' }}>
-                        {tags.map((tag, i) => (
-                            <span key={i} style={{
-                                backgroundColor: '#f0f0f0',
-                                padding: '4px 8px',
-                                borderRadius: '12px',
-                                fontSize: '12px',
-                                color: '#555'
-                            }}>
-                                #{tag}
-                            </span>
-                        ))}
-                        {tags.length === 0 && <span style={{ color: '#999', fontSize: '13px' }}>Sin etiquetas</span>}
+                    <div className="asset-detail-fila">
+                        <button
+                            className={`asset-detail-rs ${destination === 'FACEBOOK' ? 'facebook-selected' : ''}`}
+                            onClick={() => handleDestinationChange('FACEBOOK')}
+                        >
+                            <FacebookIconLarge color={destination === 'FACEBOOK' ? "#456ECE" : "#8889DB"} />
+                            <span className="asset-detail-rs-text">Facebook</span>
+                        </button>
+                        <button
+                            className={`asset-detail-rs ${destination === 'SHARE' ? 'share-selected' : ''}`}
+                            onClick={() => handleDestinationChange('SHARE')}
+                            style={{ background: destination === 'SHARE' ? '#E2E8F0' : '#FFFFFF' }}
+                        >
+                            <ShareIconLarge color={destination === 'SHARE' ? "#171A22" : "#6667C2"} />
+                            <span className="asset-detail-rs-text">Compartir</span>
+                        </button>
                     </div>
-
-                </div>
-            </div>
-
-            <div className="instagram-section">
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '20px' }}>
-                    <button
-                        onClick={() => handleDestinationChange('INSTAGRAM')}
-                        style={{
-                            flex: 1, padding: '10px', borderRadius: '8px', border: destination === 'INSTAGRAM' ? '2px solid #0095f6' : '1px solid #dbdbdb',
-                            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', cursor: 'pointer',
-                            backgroundColor: destination === 'INSTAGRAM' ? '#f0f9ff' : 'white'
-                        }}
-                    >
-                        <Instagram size={20} color={destination === 'INSTAGRAM' ? '#0095f6' : '#666'} />
-                        <span style={{ fontSize: '14px', fontWeight: destination === 'INSTAGRAM' ? '600' : '400' }}>Instagram</span>
-                    </button>
-                    <button
-                        onClick={() => handleDestinationChange('TIKTOK')}
-                        style={{
-                            flex: 1, padding: '10px', borderRadius: '8px', border: destination === 'TIKTOK' ? '2px solid #000' : '1px solid #dbdbdb',
-                            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', cursor: 'pointer',
-                            backgroundColor: destination === 'TIKTOK' ? '#f5f5f5' : 'white'
-                        }}
-                    >
-                        <Music2 size={20} color={destination === 'TIKTOK' ? '#000' : '#666'} />
-                        <span style={{ fontSize: '14px', fontWeight: destination === 'TIKTOK' ? '600' : '400' }}>TikTok</span>
-                    </button>
-                    <button
-                        onClick={() => handleDestinationChange('FACEBOOK')}
-                        style={{
-                            flex: 1, padding: '10px', borderRadius: '8px', border: destination === 'FACEBOOK' ? '2px solid #1877F2' : '1px solid #dbdbdb',
-                            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', cursor: 'pointer',
-                            backgroundColor: destination === 'FACEBOOK' ? '#e7f3ff' : 'white'
-                        }}
-                    >
-                        <Facebook size={20} color={destination === 'FACEBOOK' ? '#1877F2' : '#666'} />
-                        <span style={{ fontSize: '14px', fontWeight: destination === 'FACEBOOK' ? '600' : '400' }}>Facebook</span>
-                    </button>
-
-                    <button
-                        onClick={() => handleDestinationChange('SHARE')}
-                        style={{
-                            flex: 1, padding: '10px', borderRadius: '8px', border: destination === 'SHARE' ? '2px solid #555' : '1px solid #dbdbdb',
-                            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', cursor: 'pointer',
-                            backgroundColor: destination === 'SHARE' ? '#f0f0f0' : 'white'
-                        }}
-                    >
-                        <Share2 size={20} color={destination === 'SHARE' ? '#333' : '#666'} />
-                        <span style={{ fontSize: '14px', fontWeight: destination === 'SHARE' ? '600' : '400' }}>Compartir</span>
-                    </button>
                 </div>
 
-                <h3 ref={scrollTargetRef}>
-                    {destination === 'INSTAGRAM' ? 'Publicar en Instagram' :
-                        destination === 'TIKTOK' ? 'Publicar en TikTok' :
-                            destination === 'FACEBOOK' ? 'Publicar en Facebook' :
-                                'Compartir'}
-                </h3>
-
-                {error && (
+                {error ? (
                     <div style={{ padding: '10px', backgroundColor: '#f8d7da', color: '#721c24', borderRadius: '4px', marginBottom: '10px' }}>
                         {error}
                     </div>
-                )}
+                ) : null}
 
                 {destination === 'INSTAGRAM' ? (
                     !isConnectedInstagram ? (
-                        <>
+                        <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '24px' }}>
                             <button
-                                className="btn"
+                                className="asset-detail-main-btn"
                                 onClick={() => handleConnect('INSTAGRAM')}
                                 disabled={posting}
-                                style={{ backgroundColor: '#00C853' }}
                             >
-                                <Instagram size={20} />
-                                {posting ? 'Conectando...' : 'Conectar a Instagram'}
+                                <InstagramIconLarge color="#FFF" />
+                                <span className="asset-detail-main-btn-text">{posting ? 'Conectando...' : 'Conectar a Instagram'}</span>
                             </button>
                             {renderUnconnectedFallback()}
-                        </>
+                        </div>
                     ) : null
                 ) : destination === 'TIKTOK' ? (
                     !isConnectedTikTok ? (
-                        <>
+                        <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '24px' }}>
                             <button
-                                className="btn"
+                                className="asset-detail-main-btn"
                                 onClick={() => handleConnect('TIKTOK')}
                                 disabled={posting}
-                                style={{ backgroundColor: '#000000' }}
+                                style={{ backgroundColor: '#171A22' }}
                             >
-                                <Music2 size={20} />
-                                {posting ? 'Conectando...' : 'Conectar a TikTok'}
+                                <TikTokIconLarge color="#FFF" />
+                                <span className="asset-detail-main-btn-text">{posting ? 'Conectando...' : 'Conectar a TikTok'}</span>
                             </button>
                             {renderUnconnectedFallback()}
-                        </>
+                        </div>
                     ) : null
                 ) : destination === 'FACEBOOK' ? (
                     !isConnectedFacebook ? (
-                        <>
+                        <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '24px' }}>
                             <button
-                                className="btn"
+                                className="asset-detail-main-btn"
                                 onClick={() => handleConnect('FACEBOOK')}
                                 disabled={posting}
-                                style={{ backgroundColor: '#1877F2' }}
+                                style={{ backgroundColor: '#456ECE' }}
                             >
-                                <Facebook size={20} />
-                                {posting ? 'Conectando...' : 'Conectar a Facebook'}
+                                <FacebookIconLarge color="#FFF" />
+                                <span className="asset-detail-main-btn-text">{posting ? 'Conectando...' : 'Conectar a Facebook'}</span>
                             </button>
                             {renderUnconnectedFallback()}
-                        </>
+                        </div>
                     ) : null
                 ) : destination === 'SHARE' ? (
-                    <div style={{ marginTop: '24px', padding: '20px', backgroundColor: '#f8f9fa', borderRadius: '12px', border: '1px solid #e9ecef' }}>
-                        <h4 style={{ margin: '0 0 16px 0', fontSize: '16px', color: '#2c3e50', fontWeight: '600' }}>Paso a paso para compartir en tus redes</h4>
+                    <div className="asset-detail-message">
+                        <h4 className="asset-detail-message-title">Paso a paso para compartir en tus redes</h4>
 
-                        <div style={{ marginBottom: '20px' }}>
-                            <p style={{ margin: '0 0 8px 0', fontSize: '14px', fontWeight: '600', color: '#34495e' }}>1. Selecciona el texto que quieras utilizar para tu publicación.</p>
-                            <p style={{ margin: '0 0 12px 0', fontSize: '14px', color: '#495057', lineHeight: '1.5' }}>
-                                Haz click en el siguiente botón de "Textos sugeridos" para elegir el texto a utilizar. Simplemente toca el texto que quieras usar y se copiará en tu portapapeles para luego pegarlo en tu publicación.
-                            </p>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', width: '100%' }}>
+                            <div>
+                                <p className="asset-detail-message-step-title" style={{ marginBottom: '4px' }}>1. Selecciona el texto que quieras utilizar para tu publicación.</p>
+                                <p className="asset-detail-message-body">
+                                    Haz click en el siguiente botón de "Textos sugeridos" para elegir el texto a utilizar. Simplemente toca el texto que quieras usar y se copiará en tu portapapeles para luego pegarlo en tu publicación.
+                                </p>
+                            </div>
                             {suggestedTexts.length > 0 ? (
                                 <button
+                                    className="asset-detail-main-btn asset-detail-main-btn-secondary"
                                     onClick={() => {
                                         setSuggestedTextMode('COPY');
                                         setIsSuggestedTextsModalOpen(true);
                                     }}
-                                    style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid #ced4da', background: 'white', cursor: 'pointer', fontSize: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', color: '#495057', fontWeight: '500' }}
                                 >
-                                    <Copy size={18} /> Textos sugeridos
+                                    <CopyLinkIconLarge />
+                                    <span className="asset-detail-main-btn-text">Textos sugeridos</span>
                                 </button>
                             ) : (
                                 <div style={{ fontSize: '13px', color: '#999', fontStyle: 'italic', padding: '8px', textAlign: 'center' }}>No hay textos sugeridos disponibles para este contenido.</div>
@@ -820,14 +743,14 @@ const AssetDetail = () => {
                 ) : null}
 
                 {((destination === 'INSTAGRAM' && isConnectedInstagram) || (destination === 'TIKTOK' && isConnectedTikTok) || (destination === 'FACEBOOK' && isConnectedFacebook)) && (
-                    <div className="post-form">
+                    <div className="post-form" style={{ width: '100%' }}>
 
-                        {postResult && (
+                        {postResult ? (
                             <div style={{ padding: '16px', marginBottom: '16px', background: postResult.success ? '#d4edda' : '#f8d7da', borderRadius: '8px', color: postResult.success ? '#155724' : '#721c24', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                 <span style={{ whiteSpace: 'pre-line' }}>{postResult.message}</span>
                                 <button onClick={() => setPostResult(null)} style={{ background: 'none', border: 'none', fontSize: '16px', cursor: 'pointer', color: 'inherit' }}>&times;</button>
                             </div>
-                        )}
+                        ) : null}
 
                         <div style={{ marginBottom: '10px', color: 'green', fontSize: '14px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
@@ -844,12 +767,12 @@ const AssetDetail = () => {
                                 onClick={() => handleDisconnect(destination)}
                                 style={{
                                     background: 'none',
-                                    border: '1px solid #ccc',
-                                    borderRadius: '4px',
+                                    border: 'none',
                                     padding: '2px 8px',
                                     fontSize: '12px',
                                     cursor: 'pointer',
-                                    color: '#666'
+                                    color: '#5AAFF1',
+                                    textDecoration: 'underline'
                                 }}
                             >
                                 Desconectar
@@ -1076,15 +999,17 @@ const AssetDetail = () => {
                             </>
                         )}
 
-                        <button className="btn" onClick={handlePost} disabled={posting || ((destination === 'INSTAGRAM' && postType !== 'STORY' && !caption) || (destination === 'TIKTOK' && !caption))}>
-                            {posting ? <Loader2 className="animate-spin" size={20} /> :
-                                (destination === 'FACEBOOK' && fbMode === 'NATIVE') ? <Download size={20} /> : <Send size={20} />
+                        <button className="asset-detail-main-btn" onClick={handlePost} disabled={posting || ((destination === 'INSTAGRAM' && postType !== 'STORY' && !caption) || (destination === 'TIKTOK' && !caption))}>
+                            {posting ? <Loader2 className="animate-spin" size={20} color="#FFF" /> :
+                                (destination === 'FACEBOOK' && fbMode === 'NATIVE') ? <DownloadIconLarge color="#FFF" /> : <Send size={20} color="#FFF" />
                             }
-                            {posting ? 'Procesando...' :
-                                destination === 'INSTAGRAM' ? (postType === 'STORY' ? 'Publicar Historia (Sin Texto)' : `Publicar en ${postType === 'FEED' ? 'Instagram Post' : 'Instagram Reel'}`) :
-                                    destination === 'TIKTOK' ? 'Publicar en TikTok' :
-                                        (fbMode === 'NATIVE' ? 'Descargar y Copiar' : 'Publicar en Facebook')
-                            }
+                            <span className="asset-detail-main-btn-text">
+                                {posting ? 'Procesando...' :
+                                    destination === 'INSTAGRAM' ? (postType === 'STORY' ? 'Publicar Historia (Sin Texto)' : `Publicar en ${postType === 'FEED' ? 'Instagram Post' : 'Instagram Reel'}`) :
+                                        destination === 'TIKTOK' ? 'Publicar en TikTok' :
+                                            (fbMode === 'NATIVE' ? 'Descargar y Copiar' : 'Publicar en Facebook')
+                                }
+                            </span>
                         </button>
                     </div>
                 )}

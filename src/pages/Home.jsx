@@ -282,6 +282,12 @@ const Home = () => {
         return true;
     });
 
+    const fileAssetsCount = displayedAssets.filter(a => a.type !== 'folder').length;
+    let finalLayout = segments.length >= 4 ? "asset-foto-grid" : (segments.length >= 3 ? "list-subfolders" : (segments.length >= 2 ? "grid-3" : "grid-2"));
+    if (currentBanner && currentBanner.display_layout) {
+        finalLayout = currentBanner.display_layout;
+    }
+
     return (
         <div className="home-container">
             <header className="header-mobile-wrapper">
@@ -341,10 +347,10 @@ const Home = () => {
 
                     {!loading && !error && (
                         <div className="content-wrapper">
-                            {/* Breadcrumb */}
+                            {/* Breadcrumb vs Volver Header */}
                             {currentPath !== APP_ROOT_PATH && !isSearching && (
                                 <div className={`breadcrumb-container ${segments.length >= 2 ? 'is-deep' : ''}`}>
-                                    {segments.length >= 4 ? (
+                                    {finalLayout === "asset-foto-grid" ? (
                                         <div className="content-view-header">
                                             <button
                                                 className="back-button"
@@ -423,14 +429,7 @@ const Home = () => {
                                             <button
                                                 key={tag}
                                                 onClick={() => handleTagClick(tag)}
-                                                style={{
-                                                    padding: '4px 12px',
-                                                    borderRadius: '12px',
-                                                    border: 'none',
-                                                    backgroundColor: selectedTag === tag ? '#5AAFF1' : '#f0f0f0',
-                                                    color: selectedTag === tag ? '#fff' : '#333',
-                                                    whiteSpace: 'nowrap'
-                                                }}
+                                                className={`tag-pill ${selectedTag === tag ? 'selected' : ''}`}
                                             >
                                                 #{tag}
                                             </button>
@@ -439,7 +438,7 @@ const Home = () => {
                                 )}
 
                                 {/* Selection Mode Toggle */}
-                                {segments.length < 4 && currentPath !== APP_ROOT_PATH && displayedAssets.filter(a => a.type !== 'folder').length > 0 && (
+                                {finalLayout !== "asset-foto-grid" && currentPath !== APP_ROOT_PATH && fileAssetsCount > 0 && (
                                     <button
                                         onClick={toggleSelectionMode}
                                         className="action-button-main"
@@ -521,13 +520,13 @@ const Home = () => {
                                     <>
                                         {/* Default Logic vs CMS Override */}
                                         {(() => {
-                                            let layoutType = segments.length >= 4 ? "asset-foto-grid" : (segments.length >= 3 ? "list-subfolders" : (segments.length >= 2 ? "grid-3" : "grid-2"));
-                                            let wrapClass = segments.length >= 4 ? "asset-foto-grid" : (segments.length >= 3 ? "folder-list-container" : "grid-2-col");
+                                            let layoutType = finalLayout;
+                                            let wrapClass = layoutType === "asset-foto-grid" ? "asset-foto-grid" : (layoutType === "list-subfolders" || layoutType === "folder-list-row" ? "folder-list-container" : "grid-2-col");
 
                                             // Override with CMS display_layout if present
                                             if (currentBanner && currentBanner.display_layout) {
                                                 const dl = currentBanner.display_layout;
-                                                layoutType = dl;
+                                                // layoutType is already synced with finalLayout above
                                                 if (dl === "list-subfolders" || dl === "folder-list-row") {
                                                     layoutType = "list-subfolders";
                                                     wrapClass = "folder-list-container";
@@ -575,19 +574,6 @@ const Home = () => {
                                                             }
                                                         }
 
-                                                        // Local individual banner override if that specific child has its own layout defined
-                                                        // (though usually parent defines child view, if local is needed it could be here)
-                                                        if (banner.display_layout) {
-                                                            if (banner.display_layout === "list-subfolders") {
-                                                                isListLevel = true;
-                                                                cardClass = "folder-list-row";
-                                                            } else {
-                                                                isListLevel = false;
-                                                                if (banner.display_layout.includes("card")) {
-                                                                    cardClass = `category-card ${banner.display_layout}`;
-                                                                }
-                                                            }
-                                                        }
                                                         // Render banner as a row if in list level, else as a card
                                                         if (isListLevel) {
                                                             return (
@@ -629,7 +615,7 @@ const Home = () => {
                                                                     className="card-image-container"
                                                                     style={{
                                                                         backgroundImage: banner.image ? `url(${getImageUrl(banner.image)})` : undefined,
-                                                                        backgroundColor: segments.length >= 2 ? '#ECF0FA' : '#EEECF7',
+                                                                        backgroundColor: cardClass.includes('card-v3') ? '#ECF0FA' : '#EEECF7',
                                                                         backgroundSize: 'cover',
                                                                         display: 'flex',
                                                                         alignItems: 'center',
@@ -640,7 +626,7 @@ const Home = () => {
                                                                         maxHeight: (cardClass.includes('card-small') || cardClass.includes('card-v3')) ? '172px' : '232px'
                                                                     }}
                                                                 >
-                                                                    {!banner.image && getFolderIcon(banner.display_type, banner.title, segments.length >= 2 ? 56 : 48, segments.length >= 2 ? "#456ECE" : "#A098D5")}
+                                                                    {!banner.image && getFolderIcon(banner.display_type, banner.title, cardClass.includes('card-v3') ? 56 : 48, cardClass.includes('card-v3') ? "#456ECE" : "#A098D5")}
                                                                 </div>
                                                                 <div className="card-footer-btn">
                                                                     <span className="card-title">{banner.title}</span>

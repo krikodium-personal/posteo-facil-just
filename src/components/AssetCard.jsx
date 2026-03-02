@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Folder, ChevronRight } from 'lucide-react';
 import { getFolderCoverImage } from '../services/DropboxService';
-import { CarruselsIcon, HistoriasIcon, OpenFolderIcon, DefaultFolderIcon, getFolderIcon } from './FolderIcons';
+import { CarruselsIcon, HistoriasIcon, OpenFolderIcon, DefaultFolderIcon, PhotoGridFolderIcon, getFolderIcon } from './FolderIcons';
 
 const AssetCard = ({ asset, onFolderClick, onAssetClick, selectionMode, isSelected, contextIds, currentPath, layout }) => {
     const [bgUrl, setBgUrl] = useState(null);
@@ -69,6 +69,25 @@ const AssetCard = ({ asset, onFolderClick, onAssetClick, selectionMode, isSelect
             );
         }
 
+        if (layout === "asset-foto-grid") {
+            const icon = <PhotoGridFolderIcon size={75} />;
+
+            return (
+                <div
+                    className="photo-grid-folder-card"
+                    onClick={() => onFolderClick(asset.path || asset.name)}
+                >
+                    <div className="photo-grid-folder-img-container" style={{ backgroundImage: folderBg }}>
+                        {!bgUrl && icon}
+                    </div>
+                    <div className="photo-grid-folder-footer">
+                        <span className="photo-grid-folder-title">{asset.title || asset.name}</span>
+                        <ChevronRight className="chevron-icon" color="#5AAFF1" size={16} />
+                    </div>
+                </div>
+            );
+        }
+
         return (
             <div
                 className={cardClass}
@@ -78,7 +97,7 @@ const AssetCard = ({ asset, onFolderClick, onAssetClick, selectionMode, isSelect
                     className="card-image-container"
                     style={{
                         backgroundImage: folderBg,
-                        backgroundColor: '#EEECF7',
+                        backgroundColor: isDeep ? '#ECF0FA' : '#EEECF7',
                         flexShrink: 0,
                         height: (cardClass.includes('card-small') || cardClass.includes('card-v3')) ? '172px' : '232px',
                         minHeight: (cardClass.includes('card-small') || cardClass.includes('card-v3')) ? '172px' : '232px',
@@ -134,8 +153,7 @@ const AssetCard = ({ asset, onFolderClick, onAssetClick, selectionMode, isSelect
                         )}
 
                         {selectionMode && (
-                            <div style={{
-                                position: 'absolute', top: '12px', right: '12px',
+                            <div className="selection-overlay" style={{
                                 width: '24px', height: '24px', borderRadius: '50%',
                                 border: '2px solid white',
                                 backgroundColor: isSelected ? '#5AAFF1' : 'rgba(0,0,0,0.3)',
