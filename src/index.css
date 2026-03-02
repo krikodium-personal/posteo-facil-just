@@ -250,11 +250,12 @@ body {
 }
 
 .breadcrumb-link.is-truncated {
-  max-width: 80px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
   display: inline-block;
+  flex: 0 1 auto;
+  min-width: 24px;
 }
 
 .breadcrumb-separator {
@@ -271,6 +272,14 @@ body {
   line-height: 20px;
   color: #171A22;
   /* Neutrals/900 */
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  line-clamp: 1;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: normal;
+  flex: 1;
 }
 
 /* Card Styles */
@@ -374,6 +383,14 @@ body {
   font-size: 14px;
   line-height: 20px;
   color: var(--neutral-900);
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  line-clamp: 1;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: normal;
+  flex: 1;
 }
 
 .category-card.card-v3 {
