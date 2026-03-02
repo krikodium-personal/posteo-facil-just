@@ -53,6 +53,7 @@ const Home = () => {
 
         const fetchData = async () => {
             setLoading(true);
+            setCurrentBanner(null);
             try {
                 let data = [];
                 if (searchQuery.trim().length > 0) {
