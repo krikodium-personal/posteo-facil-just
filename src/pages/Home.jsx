@@ -568,6 +568,9 @@ const Home = () => {
                                                                     cardClass = "category-card card-v3";
                                                                 } else if (currentBanner.display_layout === "card-small") {
                                                                     cardClass = "category-card card-small";
+                                                                } else if (currentBanner.display_layout === "asset-foto-grid") {
+                                                                    isListLevel = true;
+                                                                    cardClass = "folder-list-row";
                                                                 } else {
                                                                     cardClass = currentBanner.display_layout; // Pass-through
                                                                 }
