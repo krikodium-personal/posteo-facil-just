@@ -66,12 +66,15 @@ body {
   order: 0;
   align-self: stretch;
   z-index: 100;
-  position: sticky;
-  top: -60px;
   background-color: #FFFFFF;
+  padding-top: 60px;
 }
 
 .header-top-nav {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 101;
   display: flex;
   flex-direction: row;
   justify-content: space-between;
