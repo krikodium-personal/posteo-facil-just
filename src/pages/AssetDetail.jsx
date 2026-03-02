@@ -9,7 +9,7 @@ import { getBanners } from '../services/DirectusService';
 import { ArrowLeft, Instagram, Send, Plus, Tag, ChevronLeft, ChevronRight, Music2, Facebook, Loader2, Download, Copy, ExternalLink, MessageSquareText, X, Share2 } from 'lucide-react';
 
 import QuickHashtags from '../components/QuickHashtags';
-import { InstagramIconLarge, TikTokIconLarge, FacebookIconLarge, ShareIconLarge, DownloadIconLarge, CopyLinkIconLarge } from '../components/SocialIcons';
+import { InstagramIconLarge, TikTokIconLarge, FacebookIconLarge, ShareIconLarge, DownloadIconLarge, CopyLinkIconLarge, CheckCircleIconSmall, DisconnectIconMedium, SuggestedTextsIconSmall } from '../components/SocialIcons';
 
 const AssetDetail = () => {
     const { id } = useParams();
