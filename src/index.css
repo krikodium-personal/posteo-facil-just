@@ -601,14 +601,17 @@ body {
 
 .photo-grid-folder-title {
   font-family: 'Museo Sans';
-  font-weight: 400;
-  font-size: 16px;
-  line-height: 24px;
+  font-weight: 500;
+  font-size: 14px;
+  line-height: 20px;
   color: #171A22;
   flex: 1;
-  white-space: nowrap;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
   overflow: hidden;
   text-overflow: ellipsis;
+  white-space: normal;
 }
 
 
