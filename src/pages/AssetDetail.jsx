@@ -733,7 +733,7 @@ const AssetDetail = () => {
                             <button
                                 onClick={handleNativeShare}
                                 disabled={posting}
-                                style={{ width: '100%', padding: '16px', borderRadius: '8px', border: 'none', background: '#5AAFF1', cursor: 'pointer', fontSize: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', color: 'white', fontWeight: '700', fontFamily: 'Museo Sans', boxShadow: 'none' }}
+                                style={{ width: '100%', padding: '16px', borderRadius: '8px', border: 'none', background: '#5AAFF1', cursor: 'pointer', fontSize: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', color: 'white', fontWeight: '600', fontFamily: 'Museo Sans', boxShadow: 'none' }}
                             >
                                 {posting ? 'Procesando...' : 'Publicar en mi cuenta'}
                                 {!posting && <Share2 size={20} />}

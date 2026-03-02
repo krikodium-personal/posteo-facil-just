@@ -892,7 +892,7 @@ body {
 .asset-detail-warning-title {
   font-family: 'Museo Sans';
   font-style: normal;
-  font-weight: 700;
+  font-weight: 600;
   font-size: 12px;
   line-height: 18px;
   color: #2F3238;
@@ -1011,7 +1011,7 @@ body {
 .asset-detail-fb-info-text-bold {
   font-family: 'Museo Sans';
   font-style: normal;
-  font-weight: 700;
+  font-weight: 600;
   font-size: 12px;
   line-height: 18px;
   color: #456ECE;
