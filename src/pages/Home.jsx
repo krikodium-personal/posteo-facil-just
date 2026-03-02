@@ -387,9 +387,9 @@ const Home = () => {
                                     ) : (
                                         <div className="breadcrumb-container">
                                             <button
-                                                className="breadcrumb-link is-truncated"
+                                                className="breadcrumb-link"
                                                 onClick={() => setSearchParams({ country, path: APP_ROOT_PATH })}
-                                                style={{ background: 'none', border: 'none', padding: 0 }}
+                                                style={{ background: 'none', border: 'none', padding: 0, flexShrink: 0 }}
                                             >
                                                 Inicio
                                             </button>
