@@ -986,6 +986,37 @@ body {
   width: 100%;
 }
 
+.asset-detail-fb-info-box {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  padding: 11px 16px;
+  gap: 8px;
+  width: 100%;
+  box-sizing: border-box;
+  background: #ECF0FA;
+  border-radius: 8px;
+  margin-bottom: 24px;
+}
+
+.asset-detail-fb-info-text-regular {
+  font-family: 'Museo Sans';
+  font-style: normal;
+  font-weight: 500;
+  font-size: 12px;
+  line-height: 18px;
+  color: #456ECE;
+}
+
+.asset-detail-fb-info-text-bold {
+  font-family: 'Museo Sans';
+  font-style: normal;
+  font-weight: 700;
+  font-size: 12px;
+  line-height: 18px;
+  color: #456ECE;
+}
+
 .asset-detail-textarea-group {
   display: flex;
   flex-direction: column;
