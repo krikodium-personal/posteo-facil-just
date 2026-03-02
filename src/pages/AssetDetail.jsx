@@ -958,11 +958,32 @@ const AssetDetail = () => {
                             <QuickHashtags onAddTag={(tag) => setCaption(prev => prev ? prev + " " + tag : tag)} />
                         )}
 
-                        <button className="asset-detail-main-btn" onClick={handlePost} disabled={posting || ((destination === 'INSTAGRAM' && postType !== 'STORY' && !caption) || (destination === 'TIKTOK' && !caption))}>
+                        <button
+                            className="asset-detail-main-btn"
+                            onClick={handlePost}
+                            disabled={posting || ((destination === 'INSTAGRAM' && postType !== 'STORY' && !caption) || (destination === 'TIKTOK' && !caption))}
+                            style={
+                                (destination === 'FACEBOOK' && fbMode === 'NATIVE')
+                                    ? {
+                                        background: '#5AAFF1',
+                                        boxShadow: 'none',
+                                    } : {}
+                            }
+                        >
                             {posting ? <Loader2 className="animate-spin" size={20} color="#FFF" /> :
                                 (destination === 'FACEBOOK' && fbMode === 'NATIVE') ? <DownloadIconLarge color="#FFF" /> : <Send size={20} color="#FFF" />
                             }
-                            <span className="asset-detail-main-btn-text">
+                            <span
+                                className="asset-detail-main-btn-text"
+                                style={
+                                    (destination === 'FACEBOOK' && fbMode === 'NATIVE')
+                                        ? {
+                                            fontFamily: 'Museo Sans',
+                                            fontWeight: 700,
+                                            fontSize: '16px'
+                                        } : {}
+                                }
+                            >
                                 {posting ? 'Procesando...' :
                                     destination === 'INSTAGRAM' ? (postType === 'STORY' ? 'Publicar Historia (Sin Texto)' : `Publicar en ${postType === 'FEED' ? 'Instagram Post' : 'Instagram Reel'}`) :
                                         destination === 'TIKTOK' ? 'Publicar en TikTok' :
