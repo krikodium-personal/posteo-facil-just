@@ -784,35 +784,37 @@ const AssetDetail = () => {
                             </div>
                         )}
 
-                        <div className="asset-detail-inputs-container" style={{ marginTop: destination === 'INSTAGRAM' ? '0' : '24px' }}>
-                            <div className="asset-detail-textarea-group">
-                                <div className="asset-detail-textarea-header">
-                                    <span className="asset-detail-textarea-label">Texto de la publicación</span>
-                                    <span className="asset-detail-textarea-counter" style={{ opacity: caption.length > 0 ? 1 : 0.5 }}>{caption.length}/2200</span>
+                        {!(destination === 'INSTAGRAM' && postType === 'STORY') && (
+                            <div className="asset-detail-inputs-container" style={{ marginTop: destination === 'INSTAGRAM' ? '0' : '24px' }}>
+                                <div className="asset-detail-textarea-group">
+                                    <div className="asset-detail-textarea-header">
+                                        <span className="asset-detail-textarea-label">Texto de la publicación</span>
+                                        <span className="asset-detail-textarea-counter" style={{ opacity: caption.length > 0 ? 1 : 0.5 }}>{caption.length}/2200</span>
+                                    </div>
+                                    <div className="asset-detail-textarea-box">
+                                        <textarea
+                                            className="asset-detail-textarea-input"
+                                            placeholder="Escribe el texto de tu publicación aquí..."
+                                            value={caption}
+                                            onChange={(e) => setCaption(e.target.value)}
+                                            maxLength={2200}
+                                        />
+                                    </div>
                                 </div>
-                                <div className="asset-detail-textarea-box">
-                                    <textarea
-                                        className="asset-detail-textarea-input"
-                                        placeholder="Escribe el texto de tu publicación aquí..."
-                                        value={caption}
-                                        onChange={(e) => setCaption(e.target.value)}
-                                        maxLength={2200}
-                                    />
-                                </div>
-                            </div>
 
-                            {suggestedTexts.length > 0 && (
-                                <button
-                                    className="asset-detail-suggested-texts-btn"
-                                    onClick={() => {
-                                        setSuggestedTextMode('INSERT');
-                                        setIsSuggestedTextsModalOpen(true);
-                                    }}
-                                >
-                                    <SuggestedTextsIconSmall /> Ver descripciones sugeridas ({suggestedTexts.length})
-                                </button>
-                            )}
-                        </div>
+                                {suggestedTexts.length > 0 && (
+                                    <button
+                                        className="asset-detail-suggested-texts-btn"
+                                        onClick={() => {
+                                            setSuggestedTextMode('INSERT');
+                                            setIsSuggestedTextsModalOpen(true);
+                                        }}
+                                    >
+                                        <SuggestedTextsIconSmall /> Ver descripciones sugeridas ({suggestedTexts.length})
+                                    </button>
+                                )}
+                            </div>
+                        )}
 
                         {destination === 'FACEBOOK' && (
                             <div style={{ marginBottom: '16px' }}>
@@ -952,19 +954,13 @@ const AssetDetail = () => {
                         )}
 
                         {destination === 'INSTAGRAM' && postType === 'STORY' ? (
-                            <div style={{
-                                marginBottom: '20px',
-                                padding: '15px',
-                                backgroundColor: '#fff3cd',
-                                color: '#856404',
-                                borderRadius: '8px',
-                                border: '1px solid #ffeeba',
-                                fontSize: '14px',
-                                textAlign: 'center'
-                            }}>
-                                <strong>⚠️ Importante</strong><br />
-                                La API de Instagram NO permite añadir texto a las Historias automáticamente.<br />
-                                La imagen se subirá tal cual.
+                            <div className="asset-detail-warning-message" style={{ marginTop: '24px', marginBottom: '16px' }}>
+                                <div style={{ width: '24px', height: '24px', flex: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                        <path d="M11 15H13V17H11V15ZM11 7H13V13H11V7ZM11.99 2C6.47 2 2 6.48 2 12C2 17.52 6.47 22 11.99 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 11.99 2ZM12 20C7.58 20 4 16.42 4 12C4 7.58 7.58 4 12 4C16.42 4 20 7.58 20 12C20 16.42 16.42 20 12 20Z" fill="#2F3238" />
+                                    </svg>
+                                </div>
+                                <span className="asset-detail-warning-text">La API de Instagram NO permite añadir texto a las Historias automáticamente. La imagen se subirá tal cual.</span>
                             </div>
                         ) : (
                             <QuickHashtags onAddTag={(tag) => setCaption(prev => prev ? prev + " " + tag : tag)} />

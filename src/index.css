@@ -871,6 +871,29 @@ body {
   color: #6667C2;
 }
 
+.asset-detail-warning-message {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  padding: 11px 16px;
+  gap: 8px;
+  width: 100%;
+  background: #FEFBEC;
+  border-radius: 8px;
+}
+
+.asset-detail-warning-text {
+  font-family: 'Museo Sans';
+  font-style: normal;
+  font-weight: 600;
+  font-size: 12px;
+  line-height: 18px;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: #2F3238;
+  flex: 1;
+}
+
 .asset-detail-inputs-container {
   display: flex;
   flex-direction: column;
